@@ -4,7 +4,6 @@ import ScrollToTop from "./components/ScrollToTop";
 import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
 import NewsLetter from "./components/NewsLetter.jsx";
-
 import Home from "./pages/Home.jsx";
 import LoginPag from "./pages/LoginPag.jsx";
 import ProductoPag from "./pages/ProductoPag.jsx";
@@ -12,7 +11,7 @@ import AboutPag from "./pages/AboutPage.jsx";
 import BlogPage from "./pages/BlogPage.jsx";
 import CatalogoPage from "./pages/CatalogoPage.jsx";
 import ProductoDetallePage from "./pages/ProductoDetallePage.jsx";
-import Tutorial from "./components/tutorial.jsx";
+import Tutorial from "./components/Tutorial.jsx";
 
 import BackOF from "./pages/BackOF.jsx";
 import Stock from "./pages/Stock.jsx";

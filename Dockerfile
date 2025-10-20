@@ -1,20 +1,20 @@
-# Imagen base con Node.js 18
-FROM node:18
+# Imagen base con Node.js 20 (requerido por Vite 7)
+FROM node:20
 
-# Crea carpeta de trabajo
+# Directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copia archivos del proyecto
+# Copiar archivos del proyecto
 COPY . .
 
-# Instala dependencias
+# Instalar dependencias
 RUN npm install
 
-# Construye la app de Vite
+# Construir la app (crea la carpeta dist/)
 RUN npm run build
 
-# Expone el puerto (Railway usa el 3000 por defecto)
+# Exponer el puerto usado por Express
 EXPOSE 3000
 
-# Comando de inicio (servidor Express)
+# Comando para iniciar el servidor
 CMD ["npm", "start"]
