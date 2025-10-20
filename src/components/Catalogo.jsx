@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import productos from "../data/Productos.json";
+import productos from "../Data/Productos.json";
 import "./Catalogo.css";
 
 function Catalogo() {
