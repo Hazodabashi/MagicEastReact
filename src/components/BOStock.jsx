@@ -6,7 +6,7 @@ import "./BOcss.css";
 import { Link } from "react-router-dom";
 
 // Import directo del JSON
-import productosData from "../data/Productos.json";
+import productosData from "../Data/Productos.json";
 
 function StockBackOffice() {
   const stockChartRef = useRef(null);
