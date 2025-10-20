@@ -5,7 +5,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./BOcss.css";
 import { Link } from "react-router-dom";
 
-// Import directo del JSON
+
 import productosData from "../Data/Productos.json";
 
 function StockBackOffice() {
