@@ -1,0 +1,155 @@
+
+.tres-carruseles {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+
+.slider-container {
+  width: 450px;
+  height: 460px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background-color: #161727;
+  color: #ffffff;
+  box-sizing: border-box;
+}
+
+
+.carrusel-titulo {
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+
+.product {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 350px; 
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.product img {
+  width: auto;
+  height: 220px; 
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  background-color: #ffffff; 
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.product-body {
+  text-align: center;
+  font-size: 13px;
+  margin-top: 10px;
+  color: #ffffff;
+  min-height: 80px; 
+  line-height: 1.4;
+}
+
+.slick-slide {
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+}
+
+
+.slick-prev, .slick-next {
+  z-index: 10;
+  top: 50% !important;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.slick-prev {
+  left: 10px;
+}
+
+.slick-next {
+  right: 10px;
+}
+
+.slick-prev:before,
+.slick-next:before {
+  font-size: 20px;
+  color: white;
+  opacity: 1;
+}
+
+.custom-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 35px;
+  height: 35px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  cursor: pointer;
+}
+
+.next-arrow {
+  right: 10px;
+}
+
+.prev-arrow {
+  left: 10px;
+}
+
+
+.tres-carruseles,
+.tres-carruseles * {
+  color: #ffffff !important;
+}
+
+/* ======== RESPONSIVE ======== */
+
+@media (max-width: 1200px) {
+  .slider-container {
+    width: 400px;
+    height: 400px;
+  }
+}
+
+@media (max-width: 900px) {
+  .tres-carruseles {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .slider-container {
+    width: 90%;
+    height: auto;
+  }
+
+  .product {
+    height: auto;
+  }
+
+  .product img {
+    height: 180px;
+  }
+}

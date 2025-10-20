@@ -1,0 +1,219 @@
+/* === HEADER GENERAL === */
+#header {
+  background-color: #070720;
+  padding: 10px 0;
+  border-bottom: 1px solid #070720;
+  font-family: sans-serif;
+  position: relative; /* necesario para el dropdown */
+  z-index: 999; /* asegura que el header esté sobre otros elementos */
+}
+
+.header-container {
+  max-width: 1500px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* === LOGO === */
+.header-logo .logo-text {
+  text-decoration: none;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.header-logo .magic {
+  color: #ffffff;
+}
+
+.header-logo .west {
+  color: #ff0000;
+}
+
+/* === SEARCH BAR === */
+.header-search form {
+  display: flex;
+  gap: 10px;
+  width: 1100px;
+  align-items: stretch;
+}
+
+.input-select,
+.input {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  height: 40px !important;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.search-btn {
+  background-color: #ff0000 !important;
+  color: #fff;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  height: 40px !important;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  transition: background 0.3s ease;
+}
+
+.search-btn:hover {
+  background-color: #cc0000 !important;
+}
+
+/* === ACCOUNT / CART === */
+.header-account {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+}
+
+/* === CARRITO === */
+.cart-container {
+  position: relative;
+  display: inline-block;
+}
+
+.cart-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  position: relative;
+  color: white;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.3s ease;
+}
+
+.cart-toggle:hover {
+  color: #ff0000;
+}
+
+/* Círculo con cantidad (opcional, si lo agregas después) */
+.cart-toggle .qty {
+  background-color: #ff0000;
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 50%;
+  padding: 2px 6px;
+  position: absolute;
+  top: -6px;
+  right: -10px;
+}
+
+/* === DROPDOWN DEL CARRITO === */
+.cart-dropdown {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  width: 320px;
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  padding: 15px;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.25s ease;
+}
+
+/* Cuando el carrito está abierto */
+.cart-container:hover .cart-dropdown,
+.cart-container.open .cart-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* === ITEMS DENTRO DEL CARRITO === */
+.cart-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+.cart-item img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.cart-item p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* === TOTAL Y BOTÓN === */
+.cart-total {
+  margin-top: 10px;
+  text-align: right;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.cart-checkout {
+  margin-top: 12px;
+  background-color: #ff0000;
+  color: white;
+  border: none;
+  width: 100%;
+  padding: 10px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.cart-checkout:hover {
+  background-color: #cc0000;
+}
+
+
+.topHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.cart-container:hover .cart-dropdown,
+.cart-container.open .cart-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0s; 
+}
+
+.cart-dropdown {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: opacity 0.5s ease, transform 0.5s ease, visibility 0s linear 0.5s;
+  
+}
