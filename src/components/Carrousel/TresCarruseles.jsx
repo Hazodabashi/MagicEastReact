@@ -4,9 +4,20 @@ import Carrusel from "./Carrusel";
 function TresCarruseles() {
   return (
     <div className="tres-carruseles">
-      <Carrusel archivoJSON="CarruselMagic.json" titulo="Magic: The Gathering" />
-      <Carrusel archivoJSON="CarruselGundam.json" titulo="Gundam" />
-      <Carrusel archivoJSON="CarruselAccesorios.json" titulo="Accesorios" />
+      <Carrusel 
+        titulo="Mazos Preconstruidos"
+        categoria="Mazo Preconstruido"
+      />
+
+      <Carrusel 
+        titulo="Accesorios TCG"
+        categoria="Accesorios TCG"
+      />
+
+      <Carrusel 
+        titulo="Booster Packs"
+        categoria="Booster Packs"
+      />
     </div>
   );
 }

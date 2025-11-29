@@ -3,63 +3,65 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import "./TresCarrusel.css";
-
+import axios from "axios";
 
 function NextArrow(props) {
-  const { onClick } = props;
-  return (
-    <div className="custom-arrow next-arrow" onClick={onClick}>
-      ⮞
-    </div>
-  );
+  return <div className="custom-arrow next-arrow" onClick={props.onClick}>⮞</div>;
 }
-
 
 function PrevArrow(props) {
-  const { onClick } = props;
-  return (
-    <div className="custom-arrow prev-arrow" onClick={onClick}>
-      ⮜
-    </div>
-  );
+  return <div className="custom-arrow prev-arrow" onClick={props.onClick}>⮜</div>;
 }
 
-function Carrusel({ archivoJSON, titulo }) {
+function Carrusel({ titulo, categoria }) {
   const [productos, setProductos] = useState([]);
 
   useEffect(() => {
-    fetch(`/data/${archivoJSON}`)
-      .then(res => res.json())
-      .then(setProductos)
-      .catch(err => console.error(err));
-  }, [archivoJSON]);
+    axios
+      .get("http://3.135.235.62:8080/api/productos")
+      .then((res) => {
+        const filtrados = res.data.filter((p) =>
+          (p.categorias || "").toLowerCase() === (categoria || "").toLowerCase()
+        );
+        setProductos(filtrados);
+      })
+      .catch((err) => console.error("ERROR BACKEND:", err));
+  }, [categoria]);
 
   const settings = {
     dots: true,
-    infinite: true,
+    infinite: productos.length > 1,
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    arrows: true,
+    arrows: productos.length > 1,
     nextArrow: <NextArrow />,
-    prevArrow: <PrevArrow />
+    prevArrow: <PrevArrow />,
   };
 
   return (
-    <div className="slider-container">
+    <div className="slider-container" style={{ minHeight: "400px" }}>
       <h2 className="carrusel-titulo">{titulo}</h2>
-      <Slider {...settings}>
-        {productos.map(p => (
-          <div className="product" key={p.id}>
-            <img src={p.imagen} alt={p.nombre} />
-            <div className="product-body">
-              <p>{p.categoria}</p>
-              <h3>{p.nombre}</h3>
-              <h4>${p.precio.toLocaleString("es-CL")}</h4>
+
+      {productos.length === 0 ? (
+        <p style={{ color: "white" }}>Cargando productos…</p>
+      ) : (
+        <Slider {...settings}>
+          {productos.map((p) => (
+            <div className="product" key={p.id}>
+              <img
+                src={`http://3.135.235.62:8080/api/productos/imagenes/${p.imagen}`}
+                alt={p.nombre}
+              />
+              <div className="product-body">
+                <p>{p.categorias}</p>
+                <h3>{p.nombre}</h3>
+                <h4>${p.precio.toLocaleString("es-CL")}</h4>
+              </div>
             </div>
-          </div>
-        ))}
-      </Slider>
+          ))}
+        </Slider>
+      )}
     </div>
   );
 }
