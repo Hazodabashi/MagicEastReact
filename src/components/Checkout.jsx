@@ -1,6 +1,8 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useRef } from "react";
 import { CarritoContext } from "./FuncionesCarrito";
 import { useNavigate } from "react-router-dom";
+import html2canvas from "html2canvas";
+import { procesarCompra } from "../api/checkoutApi"; // ⬅ IMPORTANTE
 import "./Checkout.css";
 
 const URL_IMAGEN_BASE = "http://3.135.235.62:8080/api/productos/imagenes/";
@@ -14,38 +16,84 @@ function Checkout() {
   const [region, setRegion] = useState("");
   const [telefono, setTelefono] = useState("");
 
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [cargandoCompra, setCargandoCompra] = useState(false);
+
+  const boletaRef = useRef(null);
+
   const total = carrito.reduce(
     (acc, item) => acc + item.precio * item.cantidad,
     0
   );
 
+
   const validarFormulario = () => {
-    if (
-      !direccion.trim() ||
-      !ciudad.trim() ||
-      !region.trim() ||
-      !telefono.trim()
-    ) {
+    if (!direccion.trim() || !ciudad.trim() || !region.trim() || !telefono.trim()) {
       alert("Por favor completa todos los campos de envío.");
       return false;
     }
 
-    const regexTelefono = /^\+569\d{8}$/;
+    if (!/^\+569\d{8}$/.test(telefono.trim())) {
+      alert("El teléfono debe tener el formato +569XXXXXXXX.");
+      return false;
+    }
 
-    if (!regexTelefono.test(telefono.trim())) {
-      alert("El teléfono debe tener el formato +569XXXXXXXX (8 dígitos).");
+    if (carrito.length === 0) {
+      alert("Tu carrito está vacío.");
       return false;
     }
 
     return true;
   };
 
-  const confirmarCompra = () => {
+
+  const confirmarCompra = async () => {
     if (!validarFormulario()) return;
 
-    alert("Compra realizada con éxito");
+    setCargandoCompra(true);
+
+    // Construir JSON de compra
+    const compraPayload = {
+      items: carrito.map((item) => ({
+        productoId: item.id,
+        cantidad: item.cantidad,
+      })),
+    };
+
+    try {
+      console.log("Enviando compra:", compraPayload);
+
+      await procesarCompra(compraPayload); // ⬅ LLAMADA AL BACKEND
+
+      // Si llega aquí → la compra se procesó correctamente
+      setMostrarModal(true);
+
+    } catch (error) {
+      console.error("Error al procesar compra:", error);
+
+      const mensaje =
+        error.response?.data || "Error al procesar compra en el servidor.";
+
+      alert(`❌ No se pudo procesar la compra:\n${mensaje}`);
+    } finally {
+      setCargandoCompra(false);
+    }
+  };
+
+  const cerrarModal = () => {
+    setMostrarModal(false);
     vaciarCarrito();
     navigate("/");
+  };
+
+  const descargarBoleta = async () => {
+    if (!boletaRef.current) return;
+
+    const canvas = await html2canvas(boletaRef.current);
+    const link = document.createElement("a");
+    link.download = "boleta-magiceast.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
   };
 
   return (
@@ -56,7 +104,7 @@ function Checkout() {
         <p className="checkout-vacio">Tu carrito está vacío.</p>
       ) : (
         <div className="checkout-content">
-
+          {/* Items */}
           <div className="checkout-items">
             {carrito.map((item) => (
               <div className="checkout-item" key={item.id}>
@@ -82,8 +130,8 @@ function Checkout() {
             ))}
           </div>
 
+          {/* Envío + Resumen */}
           <div className="checkout-columna">
-
             <div className="checkout-envio">
               <h3>Dirección de Envío</h3>
 
@@ -127,17 +175,77 @@ function Checkout() {
                 Total: <strong>${total.toLocaleString("es-CL")}</strong>
               </p>
 
-              <button className="checkout-btn" onClick={confirmarCompra}>
-                Confirmar compra
+              <button
+                className="checkout-btn"
+                onClick={confirmarCompra}
+                disabled={cargandoCompra}
+              >
+                {cargandoCompra ? "Procesando..." : "Confirmar compra"}
               </button>
 
               <button className="checkout-volver" onClick={() => navigate(-1)}>
                 Volver
               </button>
             </div>
-
           </div>
+        </div>
+      )}
 
+      {/* Modal de boleta */}
+      {mostrarModal && (
+        <div className="boleta-modal-overlay">
+          <div className="boleta-modal">
+            <div ref={boletaRef} className="boleta-contenido">
+              <h2>Boleta MagicEast</h2>
+              <p>
+                <strong>Dirección:</strong> {direccion}
+              </p>
+              <p>
+                <strong>Ciudad:</strong> {ciudad}
+              </p>
+              <p>
+                <strong>Región:</strong> {region}
+              </p>
+              <p>
+                <strong>Teléfono:</strong> {telefono}
+              </p>
+
+              <hr />
+
+              <table className="boleta-tabla">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Cant.</th>
+                    <th>Precio</th>
+                    <th>Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {carrito.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.nombre}</td>
+                      <td>{item.cantidad}</td>
+                      <td>${item.precio.toLocaleString("es-CL")}</td>
+                      <td>
+                        $
+                        {(item.precio * item.cantidad).toLocaleString("es-CL")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div className="boleta-total">
+                Total: <strong>${total.toLocaleString("es-CL")}</strong>
+              </div>
+            </div>
+
+            <div className="boleta-acciones">
+              <button onClick={descargarBoleta}>Descargar boleta</button>
+              <button onClick={cerrarModal}>Cerrar</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
