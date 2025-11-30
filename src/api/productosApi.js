@@ -36,6 +36,6 @@ export const crearProductoConImagen = (formData) => {
 
 export const obtenerImagenProducto = (nombreImagen) => {
   return api.get(`/productos/imagenes/${nombreImagen}`, {
-    responseType: "blob", // importante para imágenes
+    responseType: "blob",
   });
 };

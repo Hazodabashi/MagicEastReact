@@ -1,16 +1,16 @@
 import NavBar from "../components/NavBar";
-import Catalogo from "../components/Catalogo";
+import CatalogoAccesorio from "../components/CatalogoAccesorio";
 import HeroCarrusel from "../components/Carrousel/CarruselFenha";
 
 
-function CatalogoPage() {
+function CatalogoAccesorioPage() {
   return (
     <>
       <NavBar />
       <HeroCarrusel/>
-      <Catalogo />      
+      <CatalogoAccesorio />      
     </>
   );
 }
 
-export default CatalogoPage;
+export default CatalogoAccesorioPage;

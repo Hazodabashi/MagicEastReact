@@ -12,6 +12,8 @@ import BlogPage from "./pages/BlogPage.jsx";
 import CatalogoPage from "./pages/CatalogoPage.jsx";
 import ProductoDetallePage from "./pages/ProductoDetallePage.jsx";
 import Tutorial from "./components/Tutorial.jsx";
+import CatalogoBoosterPage from "./pages/CatalogoBoosterPage.jsx";
+import CatalogoAccesoriosPage from "./pages/CatalogoAccesoriosPage.jsx";
 
 import BackOF from "./pages/BackOF.jsx";
 import Stock from "./pages/Stock.jsx";
@@ -62,6 +64,8 @@ function App() {
         <Route path="/producto" element={<ProductoPag />} />
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/catalogo" element={<CatalogoPage />} />
+        <Route path="/catalogobooster" element={<CatalogoBoosterPage />} />
+        <Route path="/catalogoaccesorio" element={<CatalogoAccesoriosPage />} />
         <Route path="/about" element={<AboutPag />} />
         <Route path="/tutorial" element={<Tutorial />} />
         <Route

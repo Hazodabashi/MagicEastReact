@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { listarProductos } from "../api/productosApi";
 import "./Catalogo.css";
 
-function Catalogo() {
+function CatalogoAccesorio() {
   const navigate = useNavigate();
   const URL_IMAGEN_BASE = "http://3.135.235.62:8080/api/productos/imagenes/";
   const [productos, setProductos] = useState([]);
@@ -23,7 +23,7 @@ function Catalogo() {
 
         //filtrado de categorias
         const filtrados = productosApi.filter((p) =>
-          p.categorias?.toLowerCase().includes("mazo precon")
+          p.categorias?.toLowerCase().includes("accesorios tcg")
         );
 
         setProductos(filtrados);
@@ -58,10 +58,10 @@ function Catalogo() {
 
   return (
     <section className="catalogo">
-      <h2 className="catalogo-titulo">Mazos Preconstruidos</h2>
+      <h2 className="catalogo-titulo">Accesorios</h2>
       <div className="catalogo-grid">
         {productos.length === 0 && (
-          <p>No hay mazos preconstruidos disponibles por ahora.</p>
+          <p>No hay Accesorios disponibles por ahora.</p>
         )}
 
         {productos.map((item) => (
@@ -86,4 +86,4 @@ function Catalogo() {
   );
 }
 
-export default Catalogo;
+export default CatalogoAccesorio;

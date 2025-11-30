@@ -1,53 +1,82 @@
 import { useState, useEffect } from "react";
-import productos from "../Data/Productos.json";
+import { obtenerProducto } from "../api/productosApi";
 import "./ProductoDetalle.css";
+
+const URL_IMAGEN_BASE = "http://3.135.235.62:8080/api/productos/imagenes/";
+const PLACEHOLDER_IMG = "/images/placeholder.jpg"; // ajusta si usas otra ruta
 
 function ProductoDetalle({ idProducto, agregarAlCarrito }) {
   const [producto, setProducto] = useState(null);
   const [imagenSeleccionada, setImagenSeleccionada] = useState("");
   const [cantidad, setCantidad] = useState(1);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const encontrado = productos.find((p) => p.id === idProducto);
+    if (!idProducto) return;
 
-    if (encontrado) {
-      if (Array.isArray(encontrado.imagenes) && encontrado.imagenes.length > 0) {
-        setImagenSeleccionada(encontrado.imagenes[0]);
-      } else if (encontrado.imagen) {
-        setImagenSeleccionada(encontrado.imagen);
-      } else {
-        setImagenSeleccionada("/src/assets/productos/placeholder.jpg");
+    const fetchProducto = async () => {
+      try {
+        setCargando(true);
+        setError(null);
+
+        const response = await obtenerProducto(idProducto);
+        const data = response.data;
+
+        setProducto(data);
+
+        // Construimos la URL de la imagen
+        if (data.imagen) {
+          setImagenSeleccionada(`${URL_IMAGEN_BASE}${data.imagen}`);
+        } else {
+          setImagenSeleccionada(PLACEHOLDER_IMG);
+        }
+
+        setCantidad(1);
+      } catch (err) {
+        console.error("Error al obtener el producto:", err);
+        setError("No se pudo cargar la información del producto.");
+      } finally {
+        setCargando(false);
       }
+    };
 
-      setProducto(encontrado);
-      setCantidad(1);
-    }
+    fetchProducto();
   }, [idProducto]);
 
-  if (!producto) {
+  if (cargando) {
     return <div className="producto-detalle-cargando">Cargando producto...</div>;
+  }
+
+  if (error) {
+    return <div className="producto-detalle-error">{error}</div>;
+  }
+
+  if (!producto) {
+    return <div className="producto-detalle-error">Producto no encontrado.</div>;
   }
 
   const handleCantidad = (delta) => {
     setCantidad((prev) => {
       const nuevaCantidad = prev + delta;
       if (nuevaCantidad < 1) return 1;
-      if (nuevaCantidad > producto.stock) return producto.stock;
+      if (producto.stock != null && nuevaCantidad > producto.stock) {
+        return producto.stock;
+      }
       return nuevaCantidad;
     });
   };
 
   const handleAgregarCarrito = () => {
-  if (producto && agregarAlCarrito) {
-    agregarAlCarrito(producto, cantidad);
-  }
-};
+    if (producto && agregarAlCarrito) {
+      agregarAlCarrito(producto, cantidad);
+    }
+  };
 
-  const imagenes = Array.isArray(producto.imagenes)
-    ? producto.imagenes
-    : producto.imagen
-    ? [producto.imagen]
-    : ["/src/assets/productos/placeholder.jpg"];
+  // Como desde la API solo tienes una imagen, armamos el array para los thumbs
+  const imagenes = producto.imagen
+    ? [`${URL_IMAGEN_BASE}${producto.imagen}`]
+    : [PLACEHOLDER_IMG];
 
   return (
     <div className="producto-detalle-container">
@@ -69,13 +98,20 @@ function ProductoDetalle({ idProducto, agregarAlCarrito }) {
 
       <div className="producto-info">
         <h2 className="producto-nombre">{producto.nombre}</h2>
-        <p className="producto-categoria">{producto.categoria}</p>
+
+        {/* En tu API el campo es "categorias" */}
+        <p className="producto-categoria">
+          {producto.categorias || "Categoría no especificada"}
+        </p>
 
         <h3 className="producto-precio">
-          ${producto.precio.toLocaleString("es-CL")}
+          {producto.precio != null
+            ? `$${producto.precio.toLocaleString("es-CL")}`
+            : "Sin precio"}
         </h3>
 
-        {producto.descuento > 0 && (
+        {/* Solo mostramos descuento si tuvieras esos campos en el backend */}
+        {producto.descuento && producto.precioAntiguo && (
           <p className="producto-descuento">
             Antes:{" "}
             <span className="tachado">
@@ -85,7 +121,10 @@ function ProductoDetalle({ idProducto, agregarAlCarrito }) {
           </p>
         )}
 
-        <p className="producto-descripcion">{producto.descripcion}</p>
+        <p className="producto-descripcion">
+          {producto.descripcion || "Sin descripción disponible."}
+        </p>
+
         <p className="producto-stock">
           {producto.stock > 0
             ? `Stock disponible: ${producto.stock}`
@@ -98,7 +137,7 @@ function ProductoDetalle({ idProducto, agregarAlCarrito }) {
             <input type="number" value={cantidad} readOnly />
             <button
               onClick={() => handleCantidad(1)}
-              disabled={cantidad >= producto.stock}
+              disabled={producto.stock != null && cantidad >= producto.stock}
             >
               +
             </button>
