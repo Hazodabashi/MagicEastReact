@@ -5,18 +5,13 @@ import axios from "axios";
 import bcrypt from "bcryptjs";
 
 function Login() {
-  const usuarioLogeado = JSON.parse(localStorage.getItem("usuario"));
-  if (usuarioLogeado) {
-    window.location.href = "/";
-  }
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [registerData, setRegisterData] = useState({
     nombres: "",
     apellidos: "",
     correo: "",
+    direccion: "",
     contraseña: "",
     repetir: "",
   });
@@ -33,13 +28,8 @@ function Login() {
     setError("");
     setSuccess("");
 
-    if (!email) {
-      setError("Ingresa tu correo");
-      return;
-    }
-
-    if (!password) {
-      setError("Ingresa tu contraseña");
+    if (!email || !password) {
+      setError("Ingresa tus datos");
       return;
     }
 
@@ -55,22 +45,27 @@ function Login() {
       }
 
       const valida = await bcrypt.compare(password, usuario.contrasena);
-
       if (!valida) {
         setError("Contraseña incorrecta");
         return;
       }
 
+      const rolNormalizado = (usuario.rol || "").toUpperCase();
+
       const datosSesion = {
         id: usuario.id,
         nombre: usuario.nombre,
         email: usuario.email,
+        rol: rolNormalizado,
       };
 
       localStorage.setItem("usuario", JSON.stringify(datosSesion));
 
-      setSuccess("Inicio de sesión exitoso");
-      window.location.href = "/";
+      if (rolNormalizado === "ADMIN") {
+        window.location.href = "/BackOF";
+      } else {
+        window.location.href = "/";
+      }
     } catch (err) {
       setError("Error en el servidor");
     }
@@ -79,13 +74,13 @@ function Login() {
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    const { nombres, apellidos, correo, contraseña, repetir } = registerData;
+    const { nombres, apellidos, correo, direccion, contraseña, repetir } = registerData;
 
     setError("");
     setSuccess("");
 
-    if (!nombres || !apellidos || !correo || !contraseña || !repetir) {
-      setError("Por favor completa todos los campos");
+    if (!nombres || !apellidos || !correo || !direccion || !contraseña || !repetir) {
+      setError("Completa todos los campos");
       return;
     }
 
@@ -95,9 +90,7 @@ function Login() {
     }
 
     if (!passwordRegex.test(contraseña)) {
-      setError(
-        "La contraseña debe tener 8 caracteres, una mayúscula, una minúscula, un número y un símbolo especial"
-      );
+      setError("La contraseña no cumple los requisitos");
       return;
     }
 
@@ -110,7 +103,7 @@ function Login() {
       await axios.post("http://3.135.235.62:8080/api/usuarios", {
         nombre: `${nombres} ${apellidos}`,
         email: correo,
-        direccion: "Sin dirección",
+        direccion: direccion,
         contrasena: contraseña,
       });
 
@@ -120,6 +113,7 @@ function Login() {
         nombres: "",
         apellidos: "",
         correo: "",
+        direccion: "",
         contraseña: "",
         repetir: "",
       });
@@ -198,6 +192,17 @@ function Login() {
                   name="correo"
                   placeholder="Correo"
                   value={registerData.correo}
+                  onChange={handleRegisterChange}
+                />
+              </div>
+
+              <div className="form-group mb-3">
+                <input
+                  className="form-control"
+                  type="text"
+                  name="direccion"
+                  placeholder="Dirección"
+                  value={registerData.direccion}
                   onChange={handleRegisterChange}
                 />
               </div>
