@@ -19,3 +19,9 @@ export const obtenerUsuarioPorEmail = (email) => {
 export const eliminarUsuario = (id) => {
   return api.delete(`/usuarios/${id}`);
 };
+
+// Actualizar rol
+export const actualizarRolUsuario = (id, rol) => {
+  return api.put(`/usuarios/${id}/rol`, { rol });
+};
+

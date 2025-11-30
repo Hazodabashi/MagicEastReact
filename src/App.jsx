@@ -14,9 +14,9 @@ import ProductoDetallePage from "./pages/ProductoDetallePage.jsx";
 import Tutorial from "./components/Tutorial.jsx";
 import CatalogoBoosterPage from "./pages/CatalogoBoosterPage.jsx";
 import CatalogoAccesoriosPage from "./pages/CatalogoAccesoriosPage.jsx";
-
 import BackOF from "./pages/BackOF.jsx";
 import Stock from "./pages/Stock.jsx";
+import BOusuariosPage from "./pages/BOusuariosPage.jsx";
 
 function App() {
   const location = useLocation();
@@ -44,7 +44,7 @@ function App() {
   const vaciarCarrito = () => setCarrito([]);
 
 
-  const esBackOffice = ["/backof", "/stock"].some((ruta) =>
+  const esBackOffice = ["/backof", "/stock","/bousuarios"].some((ruta) =>
     location.pathname.toLowerCase().startsWith(ruta)
   );
 
@@ -76,6 +76,7 @@ function App() {
         {/*  Rutas del BackOffice */}
         <Route path="/BackOF" element={<BackOF />} />
         <Route path="/Stock" element={<Stock />} />
+        <Route path="/BOusuarios" element={<BOusuariosPage />} />
       </Routes>
 
       {/*  Footer y NewsLetter solo visibles en el Front */}
