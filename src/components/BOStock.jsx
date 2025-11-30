@@ -4,27 +4,46 @@ import { Chart, registerables } from "chart.js";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./BOcss.css";
 import { Link } from "react-router-dom";
-import { listarProductos, actualizarProducto } from "../api/productosApi";
+import {
+  listarProductos,
+  actualizarProducto,
+  crearProductoConImagen,
+} from "../api/productosApi";
 import { Modal, Button, Form } from "react-bootstrap";
+
+const CATEGORIAS = ["Accesorios TCG", "Mazo Preconstruido", "Booster Packs"];
 
 function StockBackOffice() {
   const stockChartRef = useRef(null);
   const [productos, setProductos] = useState([]);
+
+  // Modal editar
   const [showModal, setShowModal] = useState(false);
   const [productoEdit, setProductoEdit] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [errorEdicion, setErrorEdicion] = useState(null);
+
+  // Filtros / búsqueda
   const [categoriaFiltro, setCategoriaFiltro] = useState("todos");
   const [busqueda, setBusqueda] = useState("");
 
+  // Modal crear
+  const [showCrearModal, setShowCrearModal] = useState(false);
+  const [nuevoProducto, setNuevoProducto] = useState({
+    nombre: "",
+    marca: "",
+    categorias: "",
+    precio: "",
+    stock: "",
+    descripcion: "",
+  });
+  const [imagenNueva, setImagenNueva] = useState(null);
+  const [guardandoNuevo, setGuardandoNuevo] = useState(false);
+  const [errorNuevo, setErrorNuevo] = useState(null);
+
   const categoriasUnicas = [...new Set(productos.map((p) => p.categorias))];
 
-  const handleAbrirModalNuevoProducto = (producto) => {
-    setProductoEdit({ ...producto });
-    setErrorEdicion(null);
-    setShowModal(true);
-  };
-
+  // ====== MODAL EDITAR ======
   const handleAbrirModal = (producto) => {
     setProductoEdit({ ...producto });
     setErrorEdicion(null);
@@ -61,17 +80,86 @@ function StockBackOffice() {
       setGuardando(false);
       setShowModal(false);
     } catch (err) {
+      console.error(err);
       setErrorEdicion("No se pudo guardar los cambios.");
       setGuardando(false);
     }
   };
 
+  // ====== MODAL CREAR ======
+  const handleAbrirCrearModal = () => {
+    setNuevoProducto({
+      nombre: "",
+      marca: "",
+      categorias: "",
+      precio: "",
+      stock: "",
+      descripcion: "",
+    });
+    setImagenNueva(null);
+    setErrorNuevo(null);
+    setShowCrearModal(true);
+  };
+
+  const handleCerrarCrearModal = () => {
+    setShowCrearModal(false);
+    setGuardandoNuevo(false);
+    setErrorNuevo(null);
+  };
+
+  const handleChangeNuevo = (e) => {
+    const { name, value } = e.target;
+    setNuevoProducto((prev) => ({
+      ...prev,
+      [name]: name === "precio" || name === "stock" ? Number(value) : value,
+    }));
+  };
+
+  const handleImagenNuevaChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setImagenNueva(file);
+  };
+
+  const handleCrearNuevoProducto = async () => {
+    setGuardandoNuevo(true);
+    setErrorNuevo(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("nombre", nuevoProducto.nombre);
+      formData.append("marca", nuevoProducto.marca);
+      formData.append("categorias", nuevoProducto.categorias);
+      formData.append("precio", nuevoProducto.precio || 0);
+      formData.append("stock", nuevoProducto.stock || 0);
+      formData.append("descripcion", nuevoProducto.descripcion || "");
+
+      if (imagenNueva) {
+        formData.append("imagen", imagenNueva);
+      }
+
+      const resp = await crearProductoConImagen(formData);
+      const creado = resp.data;
+
+      // Agregar el nuevo producto a la tabla
+      setProductos((prev) => [...prev, creado]);
+
+      setGuardandoNuevo(false);
+      setShowCrearModal(false);
+    } catch (err) {
+      console.error("Error al crear producto:", err);
+      setErrorNuevo("No se pudo crear el producto. Intenta nuevamente.");
+      setGuardandoNuevo(false);
+    }
+  };
+
+  // ====== ESTADO (Disponible / Bajo stock / Agotado) ======
   const getEstado = (stock) => {
     if (stock === 0) return "Agotado";
     if (stock <= 5) return "Bajo Stock";
     return "Disponible";
   };
 
+  // ====== CHART.JS ======
   useEffect(() => {
     try {
       Chart.register(...registerables);
@@ -83,7 +171,9 @@ function StockBackOffice() {
       try {
         const resp = await listarProductos();
         setProductos(resp.data || []);
-      } catch {}
+      } catch (err) {
+        console.error("Error al listar productos:", err);
+      }
     };
     fetchProductos();
   }, []);
@@ -117,8 +207,14 @@ function StockBackOffice() {
       options: {
         plugins: { legend: { labels: { color: "#fff" } } },
         scales: {
-          x: { ticks: { color: "#ccc" }, grid: { color: "rgba(255,255,255,0.1)" } },
-          y: { ticks: { color: "#ccc" }, grid: { color: "rgba(255,255,255,0.1)" } },
+          x: {
+            ticks: { color: "#ccc" },
+            grid: { color: "rgba(255,255,255,0.1)" },
+          },
+          y: {
+            ticks: { color: "#ccc" },
+            grid: { color: "rgba(255,255,255,0.1)" },
+          },
         },
       },
     });
@@ -127,15 +223,25 @@ function StockBackOffice() {
   }, [productos]);
 
   const totalProductos = productos.length;
-  const disponibles = productos.filter((p) => getEstado(p.stock) === "Disponible").length;
-  const bajoStock = productos.filter((p) => getEstado(p.stock) === "Bajo Stock").length;
-  const agotados = productos.filter((p) => getEstado(p.stock) === "Agotado").length;
+  const disponibles = productos.filter(
+    (p) => getEstado(p.stock) === "Disponible"
+  ).length;
+  const bajoStock = productos.filter(
+    (p) => getEstado(p.stock) === "Bajo Stock"
+  ).length;
+  const agotados = productos.filter(
+    (p) => getEstado(p.stock) === "Agotado"
+  ).length;
 
   return (
     <div className="dashboard-container">
+      {/* ==== SIDEBAR ==== */}
       <div className="sidebar bg-secondary pe-4 pb-3">
         <nav className="navbar navbar-dark">
-          <Link to="/" className="navbar-brand mx-4 mb-3 text-primary text-decoration-none">
+          <Link
+            to="/"
+            className="navbar-brand mx-4 mb-3 text-primary text-decoration-none"
+          >
             <h3 className="text-primary m-0">
               <i className="fa fa-box me-2"></i>MagicEast
             </h3>
@@ -143,7 +249,11 @@ function StockBackOffice() {
 
           <div className="d-flex align-items-center ms-4 mb-4">
             <div className="position-relative">
-              <img className="profile-pic rounded-circle" src="/images/nico.png" alt="perfil" />
+              <img
+                className="profile-pic rounded-circle"
+                src="/images/nico.png"
+                alt="perfil"
+              />
               <div className="online-status"></div>
             </div>
             <div className="ms-3">
@@ -153,21 +263,30 @@ function StockBackOffice() {
           </div>
 
           <div className="navbar-nav w-100">
-            <Link to="/BackOF" className="nav-item nav-link d-flex align-items-center">
+            <Link
+              to="/BackOF"
+              className="nav-item nav-link d-flex align-items-center"
+            >
               <div className="sidebar-icon-wrapper">
                 <i className="fa fa-book"></i>
               </div>
               <span className="ms-2">Resumen</span>
             </Link>
 
-            <Link to="/Stock" className="nav-item nav-link d-flex align-items-center active">
+            <Link
+              to="/Stock"
+              className="nav-item nav-link d-flex align-items-center active"
+            >
               <div className="sidebar-icon-wrapper">
                 <i className="fa fa-cubes"></i>
               </div>
               <span className="ms-2">Stock</span>
             </Link>
 
-            <Link to="/BOusuarios" className="nav-item nav-link d-flex align-items-center">
+            <Link
+              to="/BOusuarios"
+              className="nav-item nav-link d-flex align-items-center"
+            >
               <div className="sidebar-icon-wrapper">
                 <i className="fa fa-users"></i>
               </div>
@@ -177,7 +296,9 @@ function StockBackOffice() {
         </nav>
       </div>
 
+      {/* ==== CONTENIDO PRINCIPAL ==== */}
       <div className="content bg-dark text-light w-100">
+        {/* NAVBAR SUPERIOR */}
         <nav className="navbar navbar-expand bg-secondary navbar-dark sticky-top px-4 py-0">
           <a href="#" className="sidebar-toggler flex-shrink-0">
             <i className="fa fa-bars"></i>
@@ -205,7 +326,9 @@ function StockBackOffice() {
               <Dropdown.Menu className="bg-secondary text-light border-0">
                 {bajoStock > 0 && (
                   <Dropdown.Item className="text-light">
-                    <h6 className="fw-normal mb-0">{bajoStock} producto(s) con bajo stock</h6>
+                    <h6 className="fw-normal mb-0">
+                      {bajoStock} producto(s) con bajo stock
+                    </h6>
                     <small>Hace 10 min</small>
                   </Dropdown.Item>
                 )}
@@ -214,6 +337,7 @@ function StockBackOffice() {
           </div>
         </nav>
 
+        {/* TARJETAS RESUMEN */}
         <div className="container-fluid pt-4 px-4">
           <div className="row g-4">
             <div className="col-sm-6 col-xl-3">
@@ -258,6 +382,7 @@ function StockBackOffice() {
           </div>
         </div>
 
+        {/* GRÁFICO */}
         <div className="container-fluid pt-4 px-4">
           <div className="bg-secondary text-center rounded p-4">
             <h6>Distribución de Stock por Categoría</h6>
@@ -265,44 +390,47 @@ function StockBackOffice() {
           </div>
         </div>
 
+        {/* TABLA DE INVENTARIO + FILTROS + BOTÓN AGREGAR */}
         <div className="container-fluid pt-4 px-4">
           <div className="pagos-section text-center rounded p-4">
-
-            <div className="d-flex flex-wrap align-items-center justify-content-between mb-4">
+            <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
               <h5 className="text-white mb-0">Inventario de Productos</h5>
 
-              <div className="d-flex align-items-center gap-2">
-
-                <div className="btn-group me-3 filtros-categorias">
-                  <button
-                    className={`btn btn-sm ${
-                      categoriaFiltro === "todos" ? "btn-primary" : "btn-outline-primary"
-                    }`}
-                    onClick={() => setCategoriaFiltro("todos")}
-                  >
-                    Todos
-                  </button>
-
-                  {categoriasUnicas.map((cat, i) => (
-                    <button
-                      key={i}
-                      className={`btn btn-sm ${
-                        categoriaFiltro === cat ? "btn-primary" : "btn-outline-primary"
-                      }`}
-                      onClick={() => setCategoriaFiltro(cat)}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-
+              {/* Filtros por categoría */}
+              <div className="d-flex flex-wrap gap-2 justify-content-center">
                 <button
-                  className="btn btn-sm btn-success btn-agregar-producto"
-                  onClick={handleAbrirModalNuevoProducto}
+                  className={`btn btn-sm ${
+                    categoriaFiltro === "todos"
+                      ? "btn-primary"
+                      : "btn-outline-primary"
+                  }`}
+                  onClick={() => setCategoriaFiltro("todos")}
                 >
-                  + Agregar producto
+                  Todos
                 </button>
+
+                {categoriasUnicas.map((cat, i) => (
+                  <button
+                    key={i}
+                    className={`btn btn-sm ${
+                      categoriaFiltro === cat
+                        ? "btn-primary"
+                        : "btn-outline-primary"
+                    }`}
+                    onClick={() => setCategoriaFiltro(cat)}
+                  >
+                    {cat}
+                  </button>
+                ))}
               </div>
+
+              {/* Botón para agregar producto */}
+              <button
+                className="btn btn-success btn-sm"
+                onClick={handleAbrirCrearModal}
+              >
+                + Agregar producto
+              </button>
             </div>
 
             <div className="table-responsive">
@@ -323,7 +451,9 @@ function StockBackOffice() {
                       p.nombre.toLowerCase().includes(busqueda)
                     )
                     .filter((p) =>
-                      categoriaFiltro === "todos" ? true : p.categorias === categoriaFiltro
+                      categoriaFiltro === "todos"
+                        ? true
+                        : p.categorias === categoriaFiltro
                     )
                     .map((p, i) => {
                       const estado = getEstado(p.stock);
@@ -367,6 +497,7 @@ function StockBackOffice() {
           </div>
         </div>
 
+        {/* FOOTER */}
         <div className="container-fluid pt-4 px-4">
           <div className="bg-secondary rounded-top p-4 text-center">
             © MagicEast | Designed by{" "}
@@ -376,7 +507,8 @@ function StockBackOffice() {
         </div>
       </div>
 
-      <Modal show={showModal} onHide={handleCerrarModal} centered>
+      {/* MODAL EDITAR */}
+      <Modal show={showModal} onHide={handleCerrarModal} centered dialogClassName="modal-custom">
         <Modal.Header closeButton>
           <Modal.Title>Editar producto</Modal.Title>
         </Modal.Header>
@@ -406,12 +538,18 @@ function StockBackOffice() {
 
               <Form.Group className="mb-3">
                 <Form.Label>Categoría</Form.Label>
-                <Form.Control
-                  type="text"
+                <Form.Select
                   name="categorias"
                   value={productoEdit.categorias || ""}
                   onChange={handleChangeEdit}
-                />
+                >
+                  <option value="">Selecciona una categoría</option>
+                  {CATEGORIAS.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </Form.Select>
               </Form.Group>
 
               <Form.Group className="mb-3">
@@ -445,17 +583,135 @@ function StockBackOffice() {
                 />
               </Form.Group>
 
-              {errorEdicion && <div className="text-danger small">{errorEdicion}</div>}
+              {errorEdicion && (
+                <div className="text-danger small">{errorEdicion}</div>
+              )}
             </Form>
           )}
         </Modal.Body>
 
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleCerrarModal} disabled={guardando}>
+          <Button
+            variant="secondary"
+            onClick={handleCerrarModal}
+            disabled={guardando}
+          >
             Cancelar
           </Button>
-          <Button variant="primary" onClick={handleGuardarCambios} disabled={guardando}>
+          <Button
+            variant="primary"
+            onClick={handleGuardarCambios}
+            disabled={guardando}
+          >
             {guardando ? "Guardando..." : "Guardar cambios"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* MODAL CREAR NUEVO PRODUCTO */}
+      <Modal show={showCrearModal} onHide={handleCerrarCrearModal} centered dialogClassName="modal-custom">
+        <Modal.Header closeButton>
+          <Modal.Title>Agregar producto</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Nombre</Form.Label>
+              <Form.Control
+                type="text"
+                name="nombre"
+                value={nuevoProducto.nombre}
+                onChange={handleChangeNuevo}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Marca</Form.Label>
+              <Form.Control
+                type="text"
+                name="marca"
+                value={nuevoProducto.marca}
+                onChange={handleChangeNuevo}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Categoría</Form.Label>
+              <Form.Select
+                name="categorias"
+                value={nuevoProducto.categorias}
+                onChange={handleChangeNuevo}
+              >
+                <option value="">Selecciona una categoría</option>
+                {CATEGORIAS.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Precio</Form.Label>
+              <Form.Control
+                type="number"
+                name="precio"
+                value={nuevoProducto.precio}
+                onChange={handleChangeNuevo}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Stock</Form.Label>
+              <Form.Control
+                type="number"
+                name="stock"
+                value={nuevoProducto.stock}
+                onChange={handleChangeNuevo}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Descripción</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                name="descripcion"
+                value={nuevoProducto.descripcion}
+                onChange={handleChangeNuevo}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Imagen</Form.Label>
+              <Form.Control
+                type="file"
+                accept="image/*"
+                onChange={handleImagenNuevaChange}
+              />
+            </Form.Group>
+
+            {errorNuevo && (
+              <div className="text-danger small">{errorNuevo}</div>
+            )}
+          </Form>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={handleCerrarCrearModal}
+            disabled={guardandoNuevo}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="success"
+            onClick={handleCrearNuevoProducto}
+            disabled={guardandoNuevo}
+          >
+            {guardandoNuevo ? "Guardando..." : "Crear producto"}
           </Button>
         </Modal.Footer>
       </Modal>
