@@ -15,97 +15,85 @@ function StockBackOffice() {
   const [guardando, setGuardando] = useState(false);
   const [errorEdicion, setErrorEdicion] = useState(null);
   const [categoriaFiltro, setCategoriaFiltro] = useState("todos");
-  const categoriasUnicas = [...new Set(productos.map(p => p.categorias))];
+  const [busqueda, setBusqueda] = useState("");
 
-  // Modals
-  const handleAbrirModalNuevoProducto  = (producto) => {
-  setProductoEdit({ ...producto });  
-  setErrorEdicion(null);
-  setShowModal(true);
-};
+  const categoriasUnicas = [...new Set(productos.map((p) => p.categorias))];
 
-const handleAbrirModal = (producto) => {
-  setProductoEdit({ ...producto });  
-  setErrorEdicion(null);
-  setShowModal(true);
-};
+  const handleAbrirModalNuevoProducto = (producto) => {
+    setProductoEdit({ ...producto });
+    setErrorEdicion(null);
+    setShowModal(true);
+  };
 
-const handleCerrarModal = () => {
-  setShowModal(false);
-  setProductoEdit(null);
-  setGuardando(false);
-  setErrorEdicion(null);
-};
+  const handleAbrirModal = (producto) => {
+    setProductoEdit({ ...producto });
+    setErrorEdicion(null);
+    setShowModal(true);
+  };
 
-const handleChangeEdit = (e) => {
-  const { name, value } = e.target;
-  setProductoEdit((prev) => ({
-    ...prev,
-    [name]: name === "precio" || name === "stock" ? Number(value) : value,
-  }));
-};
-
-//Cambios en el backend
-const handleGuardarCambios = async () => {
-  if (!productoEdit) return;
-  setGuardando(true);
-  setErrorEdicion(null);
-
-  try {
-    // Llamada al backend
-    await actualizarProducto(productoEdit.id, productoEdit);
-
-    // Actualizar la lista en memoria
-    setProductos((prev) =>
-      prev.map((p) => (p.id === productoEdit.id ? productoEdit : p))
-    );
-
-    setGuardando(false);
+  const handleCerrarModal = () => {
     setShowModal(false);
-  } catch (err) {
-    console.error("Error al actualizar producto:", err);
-    setErrorEdicion("No se pudo guardar los cambios. Intenta nuevamente.");
+    setProductoEdit(null);
     setGuardando(false);
-  }
-};
+    setErrorEdicion(null);
+  };
 
-  // === helpers ===
+  const handleChangeEdit = (e) => {
+    const { name, value } = e.target;
+    setProductoEdit((prev) => ({
+      ...prev,
+      [name]: name === "precio" || name === "stock" ? Number(value) : value,
+    }));
+  };
+
+  const handleGuardarCambios = async () => {
+    if (!productoEdit) return;
+    setGuardando(true);
+    setErrorEdicion(null);
+
+    try {
+      await actualizarProducto(productoEdit.id, productoEdit);
+
+      setProductos((prev) =>
+        prev.map((p) => (p.id === productoEdit.id ? productoEdit : p))
+      );
+
+      setGuardando(false);
+      setShowModal(false);
+    } catch (err) {
+      setErrorEdicion("No se pudo guardar los cambios.");
+      setGuardando(false);
+    }
+  };
+
   const getEstado = (stock) => {
     if (stock === 0) return "Agotado";
-    if (stock <= 5) return "Bajo Stock";   
+    if (stock <= 5) return "Bajo Stock";
     return "Disponible";
   };
 
-  // Registrar Chart.js
   useEffect(() => {
     try {
       Chart.register(...registerables);
     } catch {}
   }, []);
 
-  // Cargar productos desde la API
   useEffect(() => {
     const fetchProductos = async () => {
       try {
         const resp = await listarProductos();
-        const data = resp.data || [];
-        console.log("Productos desde API:", data);
-        setProductos(data);
-      } catch (error) {
-        console.error("Error al obtener productos:", error);
-      }
+        setProductos(resp.data || []);
+      } catch {}
     };
     fetchProductos();
   }, []);
 
-  // Gráfico dinámico según los productos cargados
   useEffect(() => {
     if (productos.length === 0) return;
     const ctx = stockChartRef.current?.getContext?.("2d");
     if (!ctx) return;
 
     const categorias = [...new Set(productos.map((p) => p.categorias))];
-
     const stockPorCategoria = categorias.map((cat) =>
       productos
         .filter((p) => p.categorias === cat)
@@ -129,14 +117,8 @@ const handleGuardarCambios = async () => {
       options: {
         plugins: { legend: { labels: { color: "#fff" } } },
         scales: {
-          x: {
-            ticks: { color: "#ccc" },
-            grid: { color: "rgba(255,255,255,0.1)" },
-          },
-          y: {
-            ticks: { color: "#ccc" },
-            grid: { color: "rgba(255,255,255,0.1)" },
-          },
+          x: { ticks: { color: "#ccc" }, grid: { color: "rgba(255,255,255,0.1)" } },
+          y: { ticks: { color: "#ccc" }, grid: { color: "rgba(255,255,255,0.1)" } },
         },
       },
     });
@@ -144,21 +126,13 @@ const handleGuardarCambios = async () => {
     return () => stockChart.destroy();
   }, [productos]);
 
-  // Contadores usando estado calculado
   const totalProductos = productos.length;
-  const disponibles = productos.filter(
-    (p) => getEstado(p.stock) === "Disponible"
-  ).length;
-  const bajoStock = productos.filter(
-    (p) => getEstado(p.stock) === "Bajo Stock"
-  ).length;
-  const agotados = productos.filter(
-    (p) => getEstado(p.stock) === "Agotado"
-  ).length;
+  const disponibles = productos.filter((p) => getEstado(p.stock) === "Disponible").length;
+  const bajoStock = productos.filter((p) => getEstado(p.stock) === "Bajo Stock").length;
+  const agotados = productos.filter((p) => getEstado(p.stock) === "Agotado").length;
 
   return (
     <div className="dashboard-container">
-      {/* === SIDEBAR === */}
       <div className="sidebar bg-secondary pe-4 pb-3">
         <nav className="navbar navbar-dark">
           <Link to="/" className="navbar-brand mx-4 mb-3 text-primary text-decoration-none">
@@ -166,44 +140,56 @@ const handleGuardarCambios = async () => {
               <i className="fa fa-box me-2"></i>MagicEast
             </h3>
           </Link>
+
           <div className="d-flex align-items-center ms-4 mb-4">
             <div className="position-relative">
-              <img
-                className="profile-pic rounded-circle"
-                src="/images/nico.png"
-                alt="perfil"
-              />
+              <img className="profile-pic rounded-circle" src="/images/nico.png" alt="perfil" />
               <div className="online-status"></div>
             </div>
             <div className="ms-3">
-              <h6 className="mb-0">Nicolás Núñez</h6>
-              <span>Admin</span>
+              <h6 className="mb-0">Administrador</h6>
+              <span>Magic East</span>
             </div>
           </div>
 
           <div className="navbar-nav w-100">
-            <Link to="/BackOF" className="nav-item nav-link">
-              <i className="fa fa-tachometer-alt me-2"></i>Resumen
+            <Link to="/BackOF" className="nav-item nav-link d-flex align-items-center">
+              <div className="sidebar-icon-wrapper">
+                <i className="fa fa-book"></i>
+              </div>
+              <span className="ms-2">Resumen</span>
             </Link>
-            <Link to="/stock" className="nav-item nav-link active">
-              <i className="fa fa-cubes me-2"></i>Stock Productos
+
+            <Link to="/Stock" className="nav-item nav-link d-flex align-items-center active">
+              <div className="sidebar-icon-wrapper">
+                <i className="fa fa-cubes"></i>
+              </div>
+              <span className="ms-2">Stock</span>
+            </Link>
+
+            <Link to="/BOusuarios" className="nav-item nav-link d-flex align-items-center">
+              <div className="sidebar-icon-wrapper">
+                <i className="fa fa-users"></i>
+              </div>
+              <span className="ms-2">Usuarios</span>
             </Link>
           </div>
         </nav>
       </div>
 
-      {/* === CONTENIDO === */}
       <div className="content bg-dark text-light w-100">
-        {/* NAVBAR */}
         <nav className="navbar navbar-expand bg-secondary navbar-dark sticky-top px-4 py-0">
           <a href="#" className="sidebar-toggler flex-shrink-0">
             <i className="fa fa-bars"></i>
           </a>
+
           <form className="d-none d-md-flex ms-4">
             <input
               className="form-control bg-dark border-0 text-light"
               type="search"
               placeholder="Buscar producto..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value.toLowerCase())}
             />
           </form>
 
@@ -218,10 +204,8 @@ const handleGuardarCambios = async () => {
               </Dropdown.Toggle>
               <Dropdown.Menu className="bg-secondary text-light border-0">
                 {bajoStock > 0 && (
-                  <Dropdown.Item href="#" className="text-light">
-                    <h6 className="fw-normal mb-0">
-                      {bajoStock} producto(s) con bajo stock
-                    </h6>
+                  <Dropdown.Item className="text-light">
+                    <h6 className="fw-normal mb-0">{bajoStock} producto(s) con bajo stock</h6>
                     <small>Hace 10 min</small>
                   </Dropdown.Item>
                 )}
@@ -230,7 +214,6 @@ const handleGuardarCambios = async () => {
           </div>
         </nav>
 
-        {/* TARJETAS */}
         <div className="container-fluid pt-4 px-4">
           <div className="row g-4">
             <div className="col-sm-6 col-xl-3">
@@ -242,6 +225,7 @@ const handleGuardarCambios = async () => {
                 </div>
               </div>
             </div>
+
             <div className="col-sm-6 col-xl-3">
               <div className="bg-secondary rounded d-flex align-items-center justify-content-between p-4">
                 <i className="fa fa-check-circle fa-3x text-success"></i>
@@ -251,6 +235,7 @@ const handleGuardarCambios = async () => {
                 </div>
               </div>
             </div>
+
             <div className="col-sm-6 col-xl-3">
               <div className="bg-secondary rounded d-flex align-items-center justify-content-between p-4">
                 <i className="fa fa-exclamation-triangle fa-3x text-warning"></i>
@@ -260,6 +245,7 @@ const handleGuardarCambios = async () => {
                 </div>
               </div>
             </div>
+
             <div className="col-sm-6 col-xl-3">
               <div className="bg-secondary rounded d-flex align-items-center justify-content-between p-4">
                 <i className="fa fa-times-circle fa-3x text-danger"></i>
@@ -272,7 +258,6 @@ const handleGuardarCambios = async () => {
           </div>
         </div>
 
-        {/* GRÁFICO DE STOCK */}
         <div className="container-fluid pt-4 px-4">
           <div className="bg-secondary text-center rounded p-4">
             <h6>Distribución de Stock por Categoría</h6>
@@ -280,97 +265,95 @@ const handleGuardarCambios = async () => {
           </div>
         </div>
 
-        {/* TABLA DE STOCK */}
         <div className="container-fluid pt-4 px-4">
-  <div className="pagos-section text-center rounded p-4">
+          <div className="pagos-section text-center rounded p-4">
 
-    {/* TÍTULO + BOTONES DE FILTRO */}
-    <div className="d-flex flex-wrap align-items-center justify-content-between mb-4">
-  <h5 className="text-white mb-0">Inventario de Productos</h5>
+            <div className="d-flex flex-wrap align-items-center justify-content-between mb-4">
+              <h5 className="text-white mb-0">Inventario de Productos</h5>
 
-  <div className="d-flex align-items-center gap-2">
-    {/* Botones de filtro por categoría */}
-    <div className="btn-group me-3 filtros-categorias">
-      <button
-        className={`btn btn-sm ${
-          categoriaFiltro === "todos" ? "btn-primary" : "btn-outline-primary"
-        }`}
-        onClick={() => setCategoriaFiltro("todos")}
-      >
-        Todos
-      </button>
+              <div className="d-flex align-items-center gap-2">
 
-      {categoriasUnicas.map((cat, i) => (
-        <button
-          key={i}
-          className={`btn btn-sm ${
-            categoriaFiltro === cat ? "btn-primary" : "btn-outline-primary"
-          }`}
-          onClick={() => setCategoriaFiltro(cat)}
-        >
-          {cat}
-        </button>
-      ))}
-    </div>
+                <div className="btn-group me-3 filtros-categorias">
+                  <button
+                    className={`btn btn-sm ${
+                      categoriaFiltro === "todos" ? "btn-primary" : "btn-outline-primary"
+                    }`}
+                    onClick={() => setCategoriaFiltro("todos")}
+                  >
+                    Todos
+                  </button>
 
-    {/* Botón para agregar producto */}
-    <button
-      className="btn btn-sm btn-success btn-agregar-producto"
-      onClick={handleAbrirModalNuevoProducto /* o la función que uses */}
-    >
-      + Agregar producto
-    </button>
-  </div>
-</div>
-
-    {/* TABLA */}
-    <div className="table-responsive">
-      <table className="table align-middle table-hover table-bordered mb-0 pagos-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Producto</th>
-            <th>Categoría</th>
-            <th>Precio</th>
-            <th>Stock</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {productos
-            .filter((p) =>
-              categoriaFiltro === "todos"
-                ? true
-                : p.categorias === categoriaFiltro
-            )
-            .map((p, i) => {
-              const estado = getEstado(p.stock);
-              return (
-                <tr key={i}>
-                  <td>{p.id}</td>
-                  <td>
+                  {categoriasUnicas.map((cat, i) => (
                     <button
-                      className="producto-nombre-btn"
-                      onClick={() => handleAbrirModal(p)}>
-                      {p.nombre}
-                    </button>
-                  </td>
-                  <td>{p.categorias}</td>
-                  <td>
-                    {p.precio != null
-                      ? `$${p.precio.toLocaleString("es-CL")}`
-                      : "Sin precio"}
-                  </td>
-                  <td>{p.stock}</td>
-                  <td>
-                    <span
-                      className={`badge ${
-                        estado === "Disponible"
-                          ? "bg-success"
-                          : estado === "Bajo Stock"
-                          ? "bg-warning text-dark"
-                          : "bg-danger"
+                      key={i}
+                      className={`btn btn-sm ${
+                        categoriaFiltro === cat ? "btn-primary" : "btn-outline-primary"
                       }`}
+                      onClick={() => setCategoriaFiltro(cat)}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  className="btn btn-sm btn-success btn-agregar-producto"
+                  onClick={handleAbrirModalNuevoProducto}
+                >
+                  + Agregar producto
+                </button>
+              </div>
+            </div>
+
+            <div className="table-responsive">
+              <table className="table align-middle table-hover table-bordered mb-0 pagos-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productos
+                    .filter((p) =>
+                      p.nombre.toLowerCase().includes(busqueda)
+                    )
+                    .filter((p) =>
+                      categoriaFiltro === "todos" ? true : p.categorias === categoriaFiltro
+                    )
+                    .map((p, i) => {
+                      const estado = getEstado(p.stock);
+                      return (
+                        <tr key={i}>
+                          <td>{p.id}</td>
+                          <td>
+                            <button
+                              className="producto-nombre-btn"
+                              onClick={() => handleAbrirModal(p)}
+                            >
+                              {p.nombre}
+                            </button>
+                          </td>
+                          <td>{p.categorias}</td>
+                          <td>
+                            {p.precio != null
+                              ? `$${p.precio.toLocaleString("es-CL")}`
+                              : "Sin precio"}
+                          </td>
+                          <td>{p.stock}</td>
+                          <td>
+                            <span
+                              className={`badge ${
+                                estado === "Disponible"
+                                  ? "bg-success"
+                                  : estado === "Bajo Stock"
+                                  ? "bg-warning text-dark"
+                                  : "bg-danger"
+                              }`}
                             >
                               {estado}
                             </span>
@@ -383,10 +366,7 @@ const handleGuardarCambios = async () => {
             </div>
           </div>
         </div>
-    
 
-
-        {/* FOOTER */}
         <div className="container-fluid pt-4 px-4">
           <div className="bg-secondary rounded-top p-4 text-center">
             © MagicEast | Designed by{" "}
@@ -465,9 +445,7 @@ const handleGuardarCambios = async () => {
                 />
               </Form.Group>
 
-              {errorEdicion && (
-                <div className="text-danger small">{errorEdicion}</div>
-              )}
+              {errorEdicion && <div className="text-danger small">{errorEdicion}</div>}
             </Form>
           )}
         </Modal.Body>
