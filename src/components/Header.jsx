@@ -5,6 +5,13 @@ import "./Header.css";
 function Header({ carrito = [], vaciarCarrito = () => {} }) {
   const [cartOpen, setCartOpen] = useState(false);
 
+  const usuario = JSON.parse(localStorage.getItem("usuario"));
+
+  const logout = () => {
+    localStorage.removeItem("usuario");
+    window.location.href = "/login";
+  };
+
   const toggleCart = () => setCartOpen(!cartOpen);
 
   const total = carrito.reduce(
@@ -44,18 +51,37 @@ function Header({ carrito = [], vaciarCarrito = () => {} }) {
             style={{ paddingRight: 20, listStyle: "none" }}
           >
             <li>
-              <Link to="/login">
-                <i className="fa fa-user-o" /> Mi Cuenta
-              </Link>
+              {usuario ? (
+                <>
+                  <span>
+                    <i className="fa fa-user-o" /> Hola, {usuario.nombre}
+                  </span>
+                  <button
+                    onClick={logout}
+                    style={{
+                      background: "transparent",
+                      color: "white",
+                      border: "none",
+                      marginLeft: "10px",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Cerrar sesión
+                  </button>
+                </>
+              ) : (
+                <Link to="/login">
+                  <i className="fa fa-user-o" /> Iniciar Sesión
+                </Link>
+              )}
             </li>
           </ul>
         </div>
       </div>
 
-      {/* MAIN HEADER */}
       <div id="header">
         <div className="header-container">
-          {/* LOGO */}
           <div className="header-logo">
             <Link to="/" className="logo-text">
               <span className="magic">Magic</span>
@@ -63,7 +89,6 @@ function Header({ carrito = [], vaciarCarrito = () => {} }) {
             </Link>
           </div>
 
-          {/* SEARCH BAR */}
           <div className="header-search">
             <form>
               <select className="input-select">
@@ -78,52 +103,49 @@ function Header({ carrito = [], vaciarCarrito = () => {} }) {
             </form>
           </div>
 
-          {/* CARRITO */}
-            <div
-              className="cart-container"
-              onMouseEnter={() => setCartOpen(true)}
-              onMouseLeave={() => {
-                // Espera 300ms antes de cerrar el carrito
-                setTimeout(() => setCartOpen(false), 300);
-              }}
-            >
-              <button className="cart-toggle" onClick={() => setCartOpen(!cartOpen)}>
-                <i className="fa fa-shopping-cart" />{" "}
-                <span>Carrito ({carrito.length})</span>
-              </button>
+          <div
+            className="cart-container"
+            onMouseEnter={() => setCartOpen(true)}
+            onMouseLeave={() => {
+              setTimeout(() => setCartOpen(false), 300);
+            }}
+          >
+            <button className="cart-toggle" onClick={toggleCart}>
+              <i className="fa fa-shopping-cart" />{" "}
+              <span>Carrito ({carrito.length})</span>
+            </button>
 
-              {/* Renderizamos el dropdown siempre, pero controlamos su visibilidad con CSS */}
-              <div className={`cart-dropdown ${cartOpen ? "open" : ""}`}>
-                {carrito.length === 0 ? (
-                  <p>Tu carrito está vacío</p>
-                ) : (
-                  <>
-                    <ul>
-                      {carrito.map((item) => (
-                        <li key={item.id} className="cart-item">
-                          <img
-                            src={item.imagen || "/src/assets/productos/placeholder.jpg"}
-                            alt={item.nombre}
-                          />
-                          <div>
-                            <p>{item.nombre}</p>
-                            <p>
-                              {item.cantidad} x ${item.precio.toLocaleString("es-CL")}
-                            </p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="cart-total">
-                      <strong>Total:</strong> ${total.toLocaleString("es-CL")}
-                    </div>
-                    <button className="cart-checkout" onClick={vaciarCarrito}>
-                      Realizar Compra
-                    </button>
-                  </>
-                )}
-              </div>
+            <div className={`cart-dropdown ${cartOpen ? "open" : ""}`}>
+              {carrito.length === 0 ? (
+                <p>Tu carrito está vacío</p>
+              ) : (
+                <>
+                  <ul>
+                    {carrito.map((item) => (
+                      <li key={item.id} className="cart-item">
+                        <img
+                          src={item.imagen || "/src/assets/productos/placeholder.jpg"}
+                          alt={item.nombre}
+                        />
+                        <div>
+                          <p>{item.nombre}</p>
+                          <p>
+                            {item.cantidad} x ${item.precio.toLocaleString("es-CL")}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="cart-total">
+                    <strong>Total:</strong> ${total.toLocaleString("es-CL")}
+                  </div>
+                  <button className="cart-checkout" onClick={vaciarCarrito}>
+                    Realizar Compra
+                  </button>
+                </>
+              )}
             </div>
+          </div>
 
         </div>
       </div>

@@ -1,4 +1,4 @@
-/* Contenedor principal */
+/* CONTENEDOR PRINCIPAL */
 #navigation {
   background-color: #070720;
   color: #fff;
@@ -6,7 +6,7 @@
   font-family: sans-serif;
 }
 
-/* Flex container */
+/* CONTENEDOR FLEX */
 .nav-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -17,7 +17,41 @@
   padding: 0 20px;
 }
 
-/* Menú links */
+/* ÁREA DEL USUARIO EN LA ESQUINA DERECHA */
+.usuario-area {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.usuario-nombre {
+  color: white;
+  font-weight: bold;
+}
+
+/* BOTÓN CERRAR SESIÓN */
+.logout-btn {
+  background: #e63946;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: #d62828;
+}
+
+/* BOTÓN LOGIN CUANDO NO HAY SESIÓN */
+.login-btn {
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+/* MENÚ LINKS */
 .nav-links {
   display: flex;
   gap: 25px;
@@ -47,7 +81,7 @@
   font-weight: bold;
 }
 
-/* Botón hamburguesa */
+/* MENÚ HAMBURGUESA */
 .nav-toggle {
   display: none;
   flex-direction: column;
@@ -75,7 +109,7 @@
   transform: rotate(-45deg) translate(5px, -5px);
 }
 
-/* Responsive */
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .nav-toggle {
     display: flex;
@@ -91,5 +125,11 @@
 
   .nav-links.open {
     display: flex;
+  }
+
+  .usuario-area {
+    margin-top: 10px;
+    width: 100%;
+    justify-content: flex-end;
   }
 }
