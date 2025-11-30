@@ -1,35 +1,48 @@
-import React, { createContext, useState } from 'react';
+import { createContext, useState, useEffect } from "react";
 
 export const CarritoContext = createContext();
 
-export const CarritoProvider = ({ children }) => {
-  const [carrito, setCarrito] = useState([]);
-
-  const agregarAlCarrito = (producto) => {
-    if (!producto.disponible || producto.stock <= 0) {
-      alert("Este producto no está disponible actualmente.");
-      return;
+function CarritoProvider({ children }) {
+  const [carrito, setCarrito] = useState(() => {
+    try {
+      const guardado = localStorage.getItem("carrito");
+      return guardado ? JSON.parse(guardado) : [];
+    } catch {
+      return [];
     }
+  });
 
-    const existe = carrito.find(item => item.id === producto.id);
+  useEffect(() => {
+    try {
+      localStorage.setItem("carrito", JSON.stringify(carrito));
+    } catch {}
+  }, [carrito]);
 
-    if (existe) {
-      if (existe.cantidad < producto.stock) {
-        setCarrito(carrito.map(item =>
+  const agregarAlCarrito = (producto, cantidad = 1) => {
+    setCarrito((prev) => {
+      const existe = prev.find((item) => item.id === producto.id);
+
+      if (existe) {
+        return prev.map((item) =>
           item.id === producto.id
-            ? { ...item, cantidad: item.cantidad + 1 }
+            ? { ...item, cantidad: item.cantidad + cantidad }
             : item
-        ));
-      } else {
-        alert(`Ya agregaste el máximo stock disponible (${producto.stock}).`);
+        );
       }
-    } else {
-      setCarrito([...carrito, { ...producto, cantidad: 1 }]);
-    }
+
+      return [
+        ...prev,
+        {
+          ...producto,
+          cantidad,
+          imagen: producto.imagen || null,
+        },
+      ];
+    });
   };
 
   const eliminarDelCarrito = (id) => {
-    setCarrito(carrito.filter(item => item.id !== id));
+    setCarrito((prev) => prev.filter((item) => item.id !== id));
   };
 
   const vaciarCarrito = () => {
@@ -38,9 +51,16 @@ export const CarritoProvider = ({ children }) => {
 
   return (
     <CarritoContext.Provider
-      value={{ carrito, agregarAlCarrito, eliminarDelCarrito, vaciarCarrito }}
+      value={{
+        carrito,
+        agregarAlCarrito,
+        eliminarDelCarrito,
+        vaciarCarrito,
+      }}
     >
       {children}
     </CarritoContext.Provider>
   );
-};
+}
+
+export default CarritoProvider;

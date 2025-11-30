@@ -17,6 +17,7 @@ import CatalogoAccesoriosPage from "./pages/CatalogoAccesoriosPage.jsx";
 import BackOF from "./pages/BackOF.jsx";
 import Stock from "./pages/Stock.jsx";
 import BOusuariosPage from "./pages/BOusuariosPage.jsx";
+import CheckoutPage from "./pages/CheckoutPage.jsx";
 
 function App() {
   const location = useLocation();
@@ -60,6 +61,7 @@ function App() {
       <Routes>
         {/*  Rutas del Front */}
         <Route path="/" element={<Home />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/login" element={<LoginPag />} />
         <Route path="/producto" element={<ProductoPag />} />
         <Route path="/blog" element={<BlogPage />} />

@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import "./Header.css";
+import { CarritoContext } from "./FuncionesCarrito";
 
-function Header({ carrito = [], vaciarCarrito = () => {} }) {
+function Header() {
+  const { carrito } = useContext(CarritoContext);
   const [cartOpen, setCartOpen] = useState(false);
 
   const usuario = JSON.parse(localStorage.getItem("usuario"));
@@ -24,56 +26,24 @@ function Header({ carrito = [], vaciarCarrito = () => {} }) {
       <div id="top-header">
         <div className="topHeader">
           <ul className="header-links">
+            <li><a><i className="fa fa-phone" /> +56 9 0303 4567</a></li>
+            <li><a><i className="fa fa-envelope-o" /> contacto@magiceast.cl</a></li>
             <li>
-              <a href="#">
-                <i className="fa fa-phone" /> +56 9 0303 4567
-              </a>
-            </li>
-            <li>
-              <a href="#">
-                <i className="fa fa-envelope-o" /> contacto@magiceast.cl
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.google.com/maps/place/Magicsur+Chile/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <i className="fa fa-map-marker" /> Seminario 505, Providencia,
-                Santiago de Chile
+              <a href="https://www.google.com/maps/place/Magicsur+Chile/" target="_blank">
+                <i className="fa fa-map-marker" /> Seminario 505, Providencia
               </a>
             </li>
           </ul>
 
-          <ul
-            className="header-links"
-            style={{ paddingRight: 20, listStyle: "none" }}
-          >
+          <ul className="header-links" style={{ paddingRight: 20 }}>
             <li>
               {usuario ? (
                 <>
-                  <span>
-                    <i className="fa fa-user-o" /> Hola, {usuario.nombre}
-                  </span>
-                  <button
-                    onClick={logout}
-                    style={{
-                      background: "transparent",
-                      color: "white",
-                      border: "none",
-                      marginLeft: "10px",
-                      cursor: "pointer",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Cerrar sesión
-                  </button>
+                  <span><i className="fa fa-user-o" /> Hola, {usuario.nombre}</span>
+                  <button onClick={logout} className="logout-btn">Cerrar sesión</button>
                 </>
               ) : (
-                <Link to="/login">
-                  <i className="fa fa-user-o" /> Iniciar Sesión
-                </Link>
+                <Link to="/login"><i className="fa fa-user-o" /> Iniciar Sesión</Link>
               )}
             </li>
           </ul>
@@ -82,6 +52,7 @@ function Header({ carrito = [], vaciarCarrito = () => {} }) {
 
       <div id="header">
         <div className="header-container">
+
           <div className="header-logo">
             <Link to="/" className="logo-text">
               <span className="magic">Magic</span>
@@ -92,27 +63,22 @@ function Header({ carrito = [], vaciarCarrito = () => {} }) {
           <div className="header-search">
             <form>
               <select className="input-select">
-                <option value={0}>Todas</option>
-                <option value={1}>Magic</option>
-                <option value={2}>Gundam</option>
+                <option value="0">Todas</option>
+                <option value="1">Magic</option>
+                <option value="2">Gundam</option>
               </select>
               <input className="input" placeholder="Búsqueda en catálogo" />
-              <button type="submit" className="search-btn">
-                Buscar
-              </button>
+              <button className="search-btn">Buscar</button>
             </form>
           </div>
 
           <div
             className="cart-container"
             onMouseEnter={() => setCartOpen(true)}
-            onMouseLeave={() => {
-              setTimeout(() => setCartOpen(false), 300);
-            }}
+            onMouseLeave={() => setTimeout(() => setCartOpen(false), 300)}
           >
             <button className="cart-toggle" onClick={toggleCart}>
-              <i className="fa fa-shopping-cart" />{" "}
-              <span>Carrito ({carrito.length})</span>
+              <i className="fa fa-shopping-cart" /> Carrito ({carrito.length})
             </button>
 
             <div className={`cart-dropdown ${cartOpen ? "open" : ""}`}>
@@ -123,30 +89,37 @@ function Header({ carrito = [], vaciarCarrito = () => {} }) {
                   <ul>
                     {carrito.map((item) => (
                       <li key={item.id} className="cart-item">
-                        <img
-                          src={item.imagen || "/src/assets/productos/placeholder.jpg"}
-                          alt={item.nombre}
-                        />
+                      <img
+                        src={
+                          item.imagen
+                            ? `http://3.135.235.62:8080/api/productos/imagenes/${item.imagen}`
+                            : "/images/placeholder.jpg"
+                        }
+                        alt={item.nombre}
+                        className="cart-item-img"
+                      />
+
+
                         <div>
                           <p>{item.nombre}</p>
-                          <p>
-                            {item.cantidad} x ${item.precio.toLocaleString("es-CL")}
-                          </p>
+                          <p>{item.cantidad} x ${item.precio.toLocaleString("es-CL")}</p>
                         </div>
                       </li>
                     ))}
                   </ul>
+
                   <div className="cart-total">
                     <strong>Total:</strong> ${total.toLocaleString("es-CL")}
                   </div>
-                  <button className="cart-checkout" onClick={vaciarCarrito}>
-                    Realizar Compra
-                  </button>
+
+                  <Link to="/checkout">
+                    <button className="cart-checkout">Realizar Compra</button>
+                  </Link>
                 </>
               )}
             </div>
-          </div>
 
+          </div>
         </div>
       </div>
     </header>

@@ -5,11 +5,14 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
+import  CarritoProvider  from './components/FuncionesCarrito.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <CarritoProvider>
+        <App />
+      </CarritoProvider>
     </BrowserRouter>
   </StrictMode>
 );
