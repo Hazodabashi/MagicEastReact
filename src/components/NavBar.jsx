@@ -32,8 +32,7 @@ function NavBar() {
               Inicio
             </NavLink>
           </li>
-
-          <li><a href="#">Ofertas</a></li>
+          
 
           <li>
             <NavLink 

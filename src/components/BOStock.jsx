@@ -4,13 +4,77 @@ import { Chart, registerables } from "chart.js";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./BOcss.css";
 import { Link } from "react-router-dom";
-
-
-import productosData from "../Data/Productos.json";
+import { listarProductos, actualizarProducto } from "../api/productosApi";
+import { Modal, Button, Form } from "react-bootstrap";
 
 function StockBackOffice() {
   const stockChartRef = useRef(null);
   const [productos, setProductos] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [productoEdit, setProductoEdit] = useState(null);
+  const [guardando, setGuardando] = useState(false);
+  const [errorEdicion, setErrorEdicion] = useState(null);
+  const [categoriaFiltro, setCategoriaFiltro] = useState("todos");
+  const categoriasUnicas = [...new Set(productos.map(p => p.categorias))];
+
+  // Modals
+  const handleAbrirModalNuevoProducto  = (producto) => {
+  setProductoEdit({ ...producto });  
+  setErrorEdicion(null);
+  setShowModal(true);
+};
+
+const handleAbrirModal = (producto) => {
+  setProductoEdit({ ...producto });  
+  setErrorEdicion(null);
+  setShowModal(true);
+};
+
+const handleCerrarModal = () => {
+  setShowModal(false);
+  setProductoEdit(null);
+  setGuardando(false);
+  setErrorEdicion(null);
+};
+
+const handleChangeEdit = (e) => {
+  const { name, value } = e.target;
+  setProductoEdit((prev) => ({
+    ...prev,
+    [name]: name === "precio" || name === "stock" ? Number(value) : value,
+  }));
+};
+
+//Cambios en el backend
+const handleGuardarCambios = async () => {
+  if (!productoEdit) return;
+  setGuardando(true);
+  setErrorEdicion(null);
+
+  try {
+    // Llamada al backend
+    await actualizarProducto(productoEdit.id, productoEdit);
+
+    // Actualizar la lista en memoria
+    setProductos((prev) =>
+      prev.map((p) => (p.id === productoEdit.id ? productoEdit : p))
+    );
+
+    setGuardando(false);
+    setShowModal(false);
+  } catch (err) {
+    console.error("Error al actualizar producto:", err);
+    setErrorEdicion("No se pudo guardar los cambios. Intenta nuevamente.");
+    setGuardando(false);
+  }
+};
+
+  // === helpers ===
+  const getEstado = (stock) => {
+    if (stock === 0) return "Agotado";
+    if (stock <= 5) return "Bajo Stock";   
+    return "Disponible";
+  };
 
   // Registrar Chart.js
   useEffect(() => {
@@ -19,9 +83,19 @@ function StockBackOffice() {
     } catch {}
   }, []);
 
-  // Cargar productos desde el JSON importado
+  // Cargar productos desde la API
   useEffect(() => {
-    setProductos(productosData);
+    const fetchProductos = async () => {
+      try {
+        const resp = await listarProductos();
+        const data = resp.data || [];
+        console.log("Productos desde API:", data);
+        setProductos(data);
+      } catch (error) {
+        console.error("Error al obtener productos:", error);
+      }
+    };
+    fetchProductos();
   }, []);
 
   // Gráfico dinámico según los productos cargados
@@ -30,12 +104,12 @@ function StockBackOffice() {
     const ctx = stockChartRef.current?.getContext?.("2d");
     if (!ctx) return;
 
-    const categorias = [...new Set(productos.map((p) => p.categoria))];
-    const stockPorCategoria = categorias.map(
-      (cat) =>
-        productos
-          .filter((p) => p.categoria === cat)
-          .reduce((acc, p) => acc + p.stock, 0)
+    const categorias = [...new Set(productos.map((p) => p.categorias))];
+
+    const stockPorCategoria = categorias.map((cat) =>
+      productos
+        .filter((p) => p.categorias === cat)
+        .reduce((acc, p) => acc + (p.stock || 0), 0)
     );
 
     const stockChart = new Chart(ctx, {
@@ -70,25 +144,28 @@ function StockBackOffice() {
     return () => stockChart.destroy();
   }, [productos]);
 
+  // Contadores usando estado calculado
   const totalProductos = productos.length;
-  const disponibles = productos.filter((p) => p.estado === "Disponible").length;
-  const bajoStock = productos.filter((p) => p.estado === "Bajo Stock").length;
-  const agotados = productos.filter((p) => p.estado === "Agotado").length;
+  const disponibles = productos.filter(
+    (p) => getEstado(p.stock) === "Disponible"
+  ).length;
+  const bajoStock = productos.filter(
+    (p) => getEstado(p.stock) === "Bajo Stock"
+  ).length;
+  const agotados = productos.filter(
+    (p) => getEstado(p.stock) === "Agotado"
+  ).length;
 
   return (
     <div className="dashboard-container">
       {/* === SIDEBAR === */}
       <div className="sidebar bg-secondary pe-4 pb-3">
         <nav className="navbar navbar-dark">
-          <a href="#" className="navbar-brand mx-4 mb-3">
-<Link to="/" className="text-primary text-decoration-none">
-  <h3 className="text-primary m-0">
-    <i className="fa fa-box me-2"></i>MagicEast
-  </h3>
-</Link>
-
-          </a>
-
+          <Link to="/" className="navbar-brand mx-4 mb-3 text-primary text-decoration-none">
+            <h3 className="text-primary m-0">
+              <i className="fa fa-box me-2"></i>MagicEast
+            </h3>
+          </Link>
           <div className="d-flex align-items-center ms-4 mb-4">
             <div className="position-relative">
               <img
@@ -117,7 +194,7 @@ function StockBackOffice() {
 
       {/* === CONTENIDO === */}
       <div className="content bg-dark text-light w-100">
-        {/* === NAVBAR === */}
+        {/* NAVBAR */}
         <nav className="navbar navbar-expand bg-secondary navbar-dark sticky-top px-4 py-0">
           <a href="#" className="sidebar-toggler flex-shrink-0">
             <i className="fa fa-bars"></i>
@@ -153,7 +230,7 @@ function StockBackOffice() {
           </div>
         </nav>
 
-        {/* === TARJETAS === */}
+        {/* TARJETAS */}
         <div className="container-fluid pt-4 px-4">
           <div className="row g-4">
             <div className="col-sm-6 col-xl-3">
@@ -195,7 +272,7 @@ function StockBackOffice() {
           </div>
         </div>
 
-        {/* === GRÁFICO DE STOCK === */}
+        {/* GRÁFICO DE STOCK */}
         <div className="container-fluid pt-4 px-4">
           <div className="bg-secondary text-center rounded p-4">
             <h6>Distribución de Stock por Categoría</h6>
@@ -203,58 +280,113 @@ function StockBackOffice() {
           </div>
         </div>
 
-        {/* === TABLA DE STOCK === */}
+        {/* TABLA DE STOCK */}
         <div className="container-fluid pt-4 px-4">
-          <div className="pagos-section text-center rounded p-4">
-            <div className="d-flex align-items-center justify-content-between mb-4">
-              <h5 className="text-white mb-0">Inventario de Productos</h5>
-              <a href="#" className="text-primary text-decoration-none">
-                Actualizar stock
-              </a>
-            </div>
+  <div className="pagos-section text-center rounded p-4">
 
-            <div className="table-responsive">
-              <table className="table align-middle table-hover table-bordered mb-0 pagos-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Producto</th>
-                    <th>Categoría</th>
-                    <th>Precio</th>
-                    <th>Stock</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {productos.map((p, i) => (
-                    <tr key={i}>
-                      <td>{p.id}</td>
-                      <td>{p.nombre}</td>
-                      <td>{p.categoria}</td>
-                      <td>${p.precio.toLocaleString("es-CL")}</td>
-                      <td>{p.stock}</td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            p.estado === "Disponible"
-                              ? "bg-success"
-                              : p.estado === "Bajo Stock"
-                              ? "bg-warning text-dark"
-                              : "bg-danger"
-                          }`}
-                        >
-                          {p.estado}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+    {/* TÍTULO + BOTONES DE FILTRO */}
+    <div className="d-flex flex-wrap align-items-center justify-content-between mb-4">
+  <h5 className="text-white mb-0">Inventario de Productos</h5>
+
+  <div className="d-flex align-items-center gap-2">
+    {/* Botones de filtro por categoría */}
+    <div className="btn-group me-3 filtros-categorias">
+      <button
+        className={`btn btn-sm ${
+          categoriaFiltro === "todos" ? "btn-primary" : "btn-outline-primary"
+        }`}
+        onClick={() => setCategoriaFiltro("todos")}
+      >
+        Todos
+      </button>
+
+      {categoriasUnicas.map((cat, i) => (
+        <button
+          key={i}
+          className={`btn btn-sm ${
+            categoriaFiltro === cat ? "btn-primary" : "btn-outline-primary"
+          }`}
+          onClick={() => setCategoriaFiltro(cat)}
+        >
+          {cat}
+        </button>
+      ))}
+    </div>
+
+    {/* Botón para agregar producto */}
+    <button
+      className="btn btn-sm btn-success btn-agregar-producto"
+      onClick={handleAbrirModalNuevoProducto /* o la función que uses */}
+    >
+      + Agregar producto
+    </button>
+  </div>
+</div>
+
+    {/* TABLA */}
+    <div className="table-responsive">
+      <table className="table align-middle table-hover table-bordered mb-0 pagos-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {productos
+            .filter((p) =>
+              categoriaFiltro === "todos"
+                ? true
+                : p.categorias === categoriaFiltro
+            )
+            .map((p, i) => {
+              const estado = getEstado(p.stock);
+              return (
+                <tr key={i}>
+                  <td>{p.id}</td>
+                  <td>
+                    <button
+                      className="producto-nombre-btn"
+                      onClick={() => handleAbrirModal(p)}>
+                      {p.nombre}
+                    </button>
+                  </td>
+                  <td>{p.categorias}</td>
+                  <td>
+                    {p.precio != null
+                      ? `$${p.precio.toLocaleString("es-CL")}`
+                      : "Sin precio"}
+                  </td>
+                  <td>{p.stock}</td>
+                  <td>
+                    <span
+                      className={`badge ${
+                        estado === "Disponible"
+                          ? "bg-success"
+                          : estado === "Bajo Stock"
+                          ? "bg-warning text-dark"
+                          : "bg-danger"
+                      }`}
+                            >
+                              {estado}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
+    
 
-        {/* === FOOTER === */}
+
+        {/* FOOTER */}
         <div className="container-fluid pt-4 px-4">
           <div className="bg-secondary rounded-top p-4 text-center">
             © MagicEast | Designed by{" "}
@@ -263,6 +395,92 @@ function StockBackOffice() {
           </div>
         </div>
       </div>
+
+      <Modal show={showModal} onHide={handleCerrarModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Editar producto</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          {productoEdit && (
+            <Form>
+              <Form.Group className="mb-3">
+                <Form.Label>Nombre</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="nombre"
+                  value={productoEdit.nombre || ""}
+                  onChange={handleChangeEdit}
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Marca</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="marca"
+                  value={productoEdit.marca || ""}
+                  onChange={handleChangeEdit}
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Categoría</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="categorias"
+                  value={productoEdit.categorias || ""}
+                  onChange={handleChangeEdit}
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Precio</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="precio"
+                  value={productoEdit.precio ?? ""}
+                  onChange={handleChangeEdit}
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Stock</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="stock"
+                  value={productoEdit.stock ?? ""}
+                  onChange={handleChangeEdit}
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Descripción</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  name="descripcion"
+                  value={productoEdit.descripcion || ""}
+                  onChange={handleChangeEdit}
+                />
+              </Form.Group>
+
+              {errorEdicion && (
+                <div className="text-danger small">{errorEdicion}</div>
+              )}
+            </Form>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCerrarModal} disabled={guardando}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={handleGuardarCambios} disabled={guardando}>
+            {guardando ? "Guardando..." : "Guardar cambios"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
