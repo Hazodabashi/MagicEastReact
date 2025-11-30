@@ -85,7 +85,11 @@ function ProductoDetalle({ idProducto }) {
         <h2>{producto.nombre}</h2>
         <p>{producto.categorias}</p>
         <h3>${producto.precio?.toLocaleString("es-CL")}</h3>
-
+        <p className="producto-stock">
+          {producto.stock > 0
+            ? `Stock disponible: ${producto.stock}`
+            : "Sin stock disponible"}
+        </p>
         <div className="producto-acciones">
           <div className="cantidad-selector">
             <button onClick={() => handleCantidad(-1)}>-</button>
