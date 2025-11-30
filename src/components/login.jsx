@@ -1,13 +1,18 @@
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./Login.css";
+import axios from "axios";
+import bcrypt from "bcryptjs";
 
 function Login() {
-  // === ESTADOS DE LOGIN ===
+  const usuarioLogeado = JSON.parse(localStorage.getItem("usuario"));
+  if (usuarioLogeado) {
+    window.location.href = "/";
+  }
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // === ESTADOS DE REGISTRO ===
   const [registerData, setRegisterData] = useState({
     nombres: "",
     apellidos: "",
@@ -16,47 +21,62 @@ function Login() {
     repetir: "",
   });
 
-  // === MENSAJES GLOBALES ===
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // === REGEX ===
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,}$/;
 
-  // === FUNCIÓN LOGIN ===
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-
     setError("");
     setSuccess("");
 
-    if (!emailRegex.test(email)) {
-      setError("Correo electrónico no válido");
+    if (!email) {
+      setError("Ingresa tu correo");
       return;
     }
 
-    if (!passwordRegex.test(password)) {
-      setError(
-        "La contraseña debe tener 8 caracteres, una mayúscula, una minúscula, un número y un símbolo especial"
-      );
+    if (!password) {
+      setError("Ingresa tu contraseña");
       return;
     }
 
-    // Cuenta de administrador
-    if (email === "magiceast@admin.cl" && password === "Admin123_") {
+    try {
+      const response = await axios.get("http://3.135.235.62:8080/api/usuarios");
+      const usuarios = response.data;
+
+      const usuario = usuarios.find((u) => u.email === email);
+
+      if (!usuario) {
+        setError("Email no registrado");
+        return;
+      }
+
+      const valida = await bcrypt.compare(password, usuario.contrasena);
+
+      if (!valida) {
+        setError("Contraseña incorrecta");
+        return;
+      }
+
+      const datosSesion = {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+      };
+
+      localStorage.setItem("usuario", JSON.stringify(datosSesion));
+
       setSuccess("Inicio de sesión exitoso");
-      setError("");
-      window.location.href = "/BackOF";
-      return;
+      window.location.href = "/";
+    } catch (err) {
+      setError("Error en el servidor");
     }
-
-    setError("Cuenta o contraseña incorrectas");
   };
 
-  // === FUNCIÓN REGISTRO ===
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
     const { nombres, apellidos, correo, contraseña, repetir } = registerData;
@@ -86,21 +106,28 @@ function Login() {
       return;
     }
 
+    try {
+      await axios.post("http://3.135.235.62:8080/api/usuarios", {
+        nombre: `${nombres} ${apellidos}`,
+        email: correo,
+        direccion: "Sin dirección",
+        contrasena: contraseña,
+      });
 
-    setSuccess(" Usuario registrado correctamente");
-    setError("");
+      setSuccess("Usuario registrado correctamente");
 
-    // Limpiar campos
-    setRegisterData({
-      nombres: "",
-      apellidos: "",
-      correo: "",
-      contraseña: "",
-      repetir: "",
-    });
+      setRegisterData({
+        nombres: "",
+        apellidos: "",
+        correo: "",
+        contraseña: "",
+        repetir: "",
+      });
+    } catch (err) {
+      setError("Error al registrar usuario");
+    }
   };
 
-  // === FUNCIÓN CAMBIOS REGISTRO ===
   const handleRegisterChange = (e) => {
     setRegisterData({ ...registerData, [e.target.name]: e.target.value });
   };
@@ -109,7 +136,7 @@ function Login() {
     <div className="login-page">
       <div className="container">
         <div className="row justify-content-center">
-          {/* === INICIO DE SESIÓN === */}
+
           <div className="col-md-5 form-box">
             <h3 className="form-title">Iniciar Sesión</h3>
             <form onSubmit={handleLogin}>
@@ -122,6 +149,7 @@ function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
+
               <div className="form-group mb-3">
                 <input
                   type="password"
@@ -131,13 +159,13 @@ function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
+
               <button type="submit" className="btn-login w-100">
                 Iniciar sesión
               </button>
             </form>
           </div>
 
-          {/* === REGISTRO DE USUARIO === */}
           <div className="col-md-5 form-box">
             <h3 className="form-title">Registrar Usuario</h3>
             <form onSubmit={handleRegister}>
@@ -151,6 +179,7 @@ function Login() {
                   onChange={handleRegisterChange}
                 />
               </div>
+
               <div className="form-group mb-3">
                 <input
                   className="form-control"
@@ -161,6 +190,7 @@ function Login() {
                   onChange={handleRegisterChange}
                 />
               </div>
+
               <div className="form-group mb-3">
                 <input
                   className="form-control"
@@ -171,6 +201,7 @@ function Login() {
                   onChange={handleRegisterChange}
                 />
               </div>
+
               <div className="form-group mb-3">
                 <input
                   className="form-control"
@@ -181,6 +212,7 @@ function Login() {
                   onChange={handleRegisterChange}
                 />
               </div>
+
               <div className="form-group mb-3">
                 <input
                   className="form-control"
@@ -191,17 +223,18 @@ function Login() {
                   onChange={handleRegisterChange}
                 />
               </div>
+
               <button type="submit" className="btn-login w-100">
                 Crear cuenta
               </button>
             </form>
           </div>
 
-          {/* === MENSAJES === */}
           <div className="col-12 text-center mt-3">
             {error && <p className="text-danger fw-bold">{error}</p>}
             {success && <p className="text-success fw-bold">{success}</p>}
           </div>
+
         </div>
       </div>
     </div>
