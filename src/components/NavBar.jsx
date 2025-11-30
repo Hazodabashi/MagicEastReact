@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./NavBar.css";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -12,37 +12,57 @@ function NavBar() {
   return (
     <nav id="navigation">
       <div className="nav-container">
-
-        <div
-          className={`nav-toggle ${menuOpen ? "open" : ""}`}
-          onClick={toggleMenu}
-        >
+        
+        {/* Botón hamburguesa */}
+        <div className={`nav-toggle ${menuOpen ? "open" : ""}`} onClick={toggleMenu}>
           <span></span>
           <span></span>
           <span></span>
         </div>
 
+        {/* Menú */}
         <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
-          <li className="active">
-            <Link to="/">Inicio</Link>
-          </li>
-          <li>
-            <a href="#">Ofertas</a>
-          </li>
-          <li>
-            <a href="#">Categorias</a>
-          </li>
-          <li>
-            <Link to="/catalogo">Mazos</Link>
-          </li>
-          <li>
-            <a href="#">Sobres</a>
-          </li>
-          <li>
-            <a href="#">Accesorios</a>
-          </li>
-        </ul>
 
+          <li>
+            <NavLink 
+              to="/"
+              className={({ isActive }) => (isActive ? "active" : "")}
+              end
+            >
+              Inicio
+            </NavLink>
+          </li>
+
+          <li><a href="#">Ofertas</a></li>
+
+          <li>
+            <NavLink 
+              to="/catalogo"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              Mazos
+            </NavLink>
+          </li>
+
+          <li>
+            <NavLink 
+              to="/catalogobooster"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              Sobres
+            </NavLink>
+          </li>
+
+          <li>
+            <NavLink 
+              to="/catalogoaccesorio"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              Accesorios
+            </NavLink>
+          </li>
+
+        </ul>
       </div>
     </nav>
   );
