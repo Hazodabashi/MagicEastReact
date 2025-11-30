@@ -99,6 +99,48 @@
 .search-btn:hover {
   background-color: #c40000 !important;
 }
+.cart-qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qty-btn {
+  background: #444;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.qty-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.qty-value {
+  min-width: 20px;
+  text-align: center;
+}
+
+.btn-delete {
+  background: #d9534f;
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-delete:hover {
+  background: #c9302c;
+}
+
+.stock-alert {
+  color: #ffcc00;
+  font-size: 11px;
+}
 
 /* === CARRITO === */
 .cart-container {
