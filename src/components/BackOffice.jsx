@@ -119,8 +119,8 @@ function BackOffice() {
               <div className="online-status"></div>
             </div>
             <div className="ms-3">
-              <h6 className="mb-0">Nicolás Núñez</h6>
-              <span>Admin</span>
+              <h6 className="mb-0">Administrador</h6>
+              <span>Magic East</span>
             </div>
           </div>
 
