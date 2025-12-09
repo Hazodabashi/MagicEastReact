@@ -18,6 +18,7 @@ import BackOF from "./pages/BackOF.jsx";
 import Stock from "./pages/Stock.jsx";
 import BOusuariosPage from "./pages/BOusuariosPage.jsx";
 import CheckoutPage from "./pages/CheckoutPage.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 function App() {
   const location = useLocation();
@@ -45,7 +46,7 @@ function App() {
   const vaciarCarrito = () => setCarrito([]);
 
 
-  const esBackOffice = ["/backof", "/stock","/bousuarios"].some((ruta) =>
+  const esBackOffice = ["/backof", "/stock", "/bousuarios"].some((ruta) =>
     location.pathname.toLowerCase().startsWith(ruta)
   );
 
@@ -76,9 +77,14 @@ function App() {
         />
 
         {/*  Rutas del BackOffice */}
-        <Route path="/BackOF" element={<BackOF />} />
-        <Route path="/Stock" element={<Stock />} />
-        <Route path="/BOusuarios" element={<BOusuariosPage />} />
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'VENDEDOR']} />}>
+          <Route path="/BackOF" element={<BackOF />} />
+          <Route path="/Stock" element={<Stock />} />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+          <Route path="/BOusuarios" element={<BOusuariosPage />} />
+        </Route>
       </Routes>
 
       {/*  Footer y NewsLetter solo visibles en el Front */}

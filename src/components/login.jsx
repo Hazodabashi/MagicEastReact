@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./Login.css";
-import axios from "axios";
-import bcrypt from "bcryptjs";
+import { login } from "../api/authApi";
+import { registrarUsuario } from "../api/usuariosApi";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -34,40 +34,42 @@ function Login() {
     }
 
     try {
-      const response = await axios.get("http://3.135.235.62:8080/api/usuarios");
-      const usuarios = response.data;
+      const response = await login(email, password);
+      const data = response.data;
 
-      const usuario = usuarios.find((u) => u.email === email);
+      if (data.token) {
+        // Guardar token
+        localStorage.setItem("token", data.token);
 
-      if (!usuario) {
-        setError("Email no registrado");
-        return;
-      }
+        // Guardar datos del usuario
+        // Asumimos que el backend devuelve la info del usuario junto con el token
+        // O al menos el rol. Si la estructura es diferente, ajustaremos.
+        const usuarioData = {
+          email: data.email || email,
+          nombre: data.nombre || "Usuario",
+          rol: (data.rol || data.role || "USER").toUpperCase(),
+          id: data.id
+        };
 
-      const valida = await bcrypt.compare(password, usuario.contrasena);
-      if (!valida) {
-        setError("Contraseña incorrecta");
-        return;
-      }
+        localStorage.setItem("usuario", JSON.stringify(usuarioData));
 
-      const rolNormalizado = (usuario.rol || "").toUpperCase();
-
-      const datosSesion = {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        email: usuario.email,
-        rol: rolNormalizado,
-      };
-
-      localStorage.setItem("usuario", JSON.stringify(datosSesion));
-
-      if (rolNormalizado === "ADMIN") {
-        window.location.href = "/BackOF";
+        // Redirección basada en rol
+        if (usuarioData.rol === "ADMIN" || usuarioData.rol === "VENDEDOR") {
+          window.location.href = "/BackOF";
+        } else {
+          window.location.href = "/";
+        }
       } else {
-        window.location.href = "/";
+        setError("Error: No se recibió token del servidor");
       }
+
     } catch (err) {
-      setError("Error en el servidor");
+      console.error(err);
+      if (err.response && err.response.status === 401) {
+        setError("Credenciales incorrectas");
+      } else {
+        setError("Error en el servidor o conexión");
+      }
     }
   };
 
@@ -100,7 +102,7 @@ function Login() {
     }
 
     try {
-      await axios.post("http://3.135.235.62:8080/api/usuarios", {
+      await registrarUsuario({
         nombre: `${nombres} ${apellidos}`,
         email: correo,
         direccion: direccion,
@@ -108,7 +110,6 @@ function Login() {
       });
 
       setSuccess("Usuario registrado correctamente");
-
       setRegisterData({
         nombres: "",
         apellidos: "",
@@ -118,6 +119,7 @@ function Login() {
         repetir: "",
       });
     } catch (err) {
+      console.error(err);
       setError("Error al registrar usuario");
     }
   };
