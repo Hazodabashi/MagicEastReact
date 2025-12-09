@@ -34,31 +34,29 @@ function Login() {
     }
 
     try {
+
       const response = await login(email, password);
       const data = response.data;
 
       if (data.token) {
-        // Guardar token
         localStorage.setItem("token", data.token);
 
-        // Guardar datos del usuario
-        // Asumimos que el backend devuelve la info del usuario junto con el token
-        // O al menos el rol. Si la estructura es diferente, ajustaremos.
+
         const usuarioData = {
-          email: data.email || email,
-          nombre: data.nombre || "Usuario",
-          rol: (data.rol || data.role || "USER").toUpperCase(),
-          id: data.id
+          id: data.id,
+          nombre: data.nombre,
+          email: data.email,
+          rol: (data.rol || "USER").toUpperCase(),
         };
 
         localStorage.setItem("usuario", JSON.stringify(usuarioData));
 
-        // Redirección basada en rol
         if (usuarioData.rol === "ADMIN" || usuarioData.rol === "VENDEDOR") {
           window.location.href = "/BackOF";
         } else {
           window.location.href = "/";
         }
+
       } else {
         setError("Error: No se recibió token del servidor");
       }
@@ -103,7 +101,7 @@ function Login() {
 
     try {
       await registrarUsuario({
-        nombre: `${nombres} ${apellidos}`,
+        nombre: `${nombres} ${apellidos} `,
         email: correo,
         direccion: direccion,
         contrasena: contraseña,

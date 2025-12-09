@@ -3,7 +3,7 @@ import Dropdown from "react-bootstrap/Dropdown";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./BOcss.css";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import { listarUsuarios, actualizarRolUsuario } from "../api/usuariosApi";
 
 function BOusuarios() {
   const [usuarios, setUsuarios] = useState([]);
@@ -13,7 +13,7 @@ function BOusuarios() {
 
   const cargarUsuarios = async () => {
     try {
-      const response = await axios.get("http://3.135.235.62:8080/api/usuarios");
+      const response = await listarUsuarios();
 
       const ordenPrioridad = { ADMIN: 1, VENDEDOR: 2, USER: 3 };
 
@@ -26,14 +26,13 @@ function BOusuarios() {
       setCargando(false);
     } catch (error) {
       console.error("Error cargando usuarios:", error);
+      setCargando(false);
     }
   };
 
   const cambiarRol = async (id, rolNuevo) => {
     try {
-      await axios.put(`http://3.135.235.62:8080/api/usuarios/${id}/rol`, {
-        rol: rolNuevo,
-      });
+      await actualizarRolUsuario(id, rolNuevo);
 
       const actualizados = usuarios
         .map((u) => (u.id === id ? { ...u, rol: rolNuevo } : u))
@@ -235,13 +234,12 @@ function BOusuarios() {
                               className="w-100 text-light"
                             >
                               <span
-                                className={`badge px-3 py-2 ${
-                                  u.rol === "ADMIN"
+                                className={`badge px-3 py-2 ${u.rol === "ADMIN"
                                     ? "bg-warning text-dark"
                                     : u.rol === "VENDEDOR"
-                                    ? "bg-success"
-                                    : "bg-secondary"
-                                }`}
+                                      ? "bg-success"
+                                      : "bg-secondary"
+                                  }`}
                               >
                                 {u.rol}
                               </span>
