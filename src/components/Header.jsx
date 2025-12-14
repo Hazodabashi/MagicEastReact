@@ -81,11 +81,6 @@ function Header() {
 
           <div className="header-search">
             <form>
-              <select className="input-select">
-                <option value="0">Todas</option>
-                <option value="1">Magic</option>
-                <option value="2">Gundam</option>
-              </select>
               <input className="input" placeholder="Búsqueda en catálogo" />
               <button className="search-btn">Buscar</button>
             </form>

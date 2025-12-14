@@ -90,6 +90,12 @@ function ProductoDetalle({ idProducto }) {
             ? `Stock disponible: ${producto.stock}`
             : "Sin stock disponible"}
         </p>
+
+        {producto.descripcion && (
+          <p className="producto-descripcion" style={{ marginTop: "10px", fontSize: "14px", color: "#ccc" }}>
+            {producto.descripcion}
+          </p>
+        )}
         <div className="producto-acciones">
           <div className="cantidad-selector">
             <button onClick={() => handleCantidad(-1)}>-</button>

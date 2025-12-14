@@ -73,16 +73,30 @@
 .header-search form {
   display: flex;
   gap: 10px;
-  width: 1100px;
+  width: 100%;
+  max-width: 800px;
+  /* Limitar ancho en pantallas grandes */
 }
 
-.input-select,
+.header-search {
+  flex: 1;
+  /* Permitir que el contenedor crezca/encoja */
+  display: flex;
+  justify-content: center;
+  /* Centrar el formulario */
+}
+
+
 .input {
+  flex: 1;
+  /* Permitir que el input llene el espacio disponible */
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
   height: 40px;
   font-size: 0.9rem;
+  min-width: 0;
+  /* Arregla desbordamiento en flex items */
 }
 
 .search-btn {
@@ -99,6 +113,7 @@
 .search-btn:hover {
   background-color: #c40000 !important;
 }
+
 .cart-qty-controls {
   display: flex;
   align-items: center;
@@ -172,7 +187,7 @@
   background-color: #ffffff;
   border: 1px solid #ccc;
   border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   padding: 15px;
   z-index: 9999;
 
@@ -180,7 +195,7 @@
   visibility: hidden;
   transform: translateY(-10px);
 
-  transition: 
+  transition:
     opacity 0.25s ease,
     transform 0.25s ease,
     visibility 0s linear 0.25s;

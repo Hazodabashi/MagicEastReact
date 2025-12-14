@@ -19,6 +19,8 @@ import Stock from "./pages/Stock.jsx";
 import BOusuariosPage from "./pages/BOusuariosPage.jsx";
 import CheckoutPage from "./pages/CheckoutPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import ScryfallCatalogoPage from "./pages/ScryfallCatalogoPage.jsx";
+import ScryfallCardDetailPage from "./pages/ScryfallCardDetailPage.jsx";
 
 function App() {
   const location = useLocation();
@@ -75,6 +77,8 @@ function App() {
           path="/productodetalle/:id"
           element={<ProductoDetallePage agregarAlCarrito={agregarAlCarrito} />}
         />
+        <Route path="/scryfall-catalogo" element={<ScryfallCatalogoPage />} />
+        <Route path="/scryfall-card/:id" element={<ScryfallCardDetailPage />} />
 
         {/*  Rutas del BackOffice */}
         <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'VENDEDOR']} />}>

@@ -12,7 +12,7 @@ function NavBar() {
   return (
     <nav id="navigation">
       <div className="nav-container">
-        
+
         {/* Botón hamburguesa */}
         <div className={`nav-toggle ${menuOpen ? "open" : ""}`} onClick={toggleMenu}>
           <span></span>
@@ -24,7 +24,7 @@ function NavBar() {
         <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
 
           <li>
-            <NavLink 
+            <NavLink
               to="/"
               className={({ isActive }) => (isActive ? "active" : "")}
               end
@@ -32,10 +32,10 @@ function NavBar() {
               Inicio
             </NavLink>
           </li>
-          
+
 
           <li>
-            <NavLink 
+            <NavLink
               to="/catalogo"
               className={({ isActive }) => (isActive ? "active" : "")}
             >
@@ -44,7 +44,7 @@ function NavBar() {
           </li>
 
           <li>
-            <NavLink 
+            <NavLink
               to="/catalogobooster"
               className={({ isActive }) => (isActive ? "active" : "")}
             >
@@ -52,12 +52,22 @@ function NavBar() {
             </NavLink>
           </li>
 
+
           <li>
-            <NavLink 
+            <NavLink
               to="/catalogoaccesorio"
               className={({ isActive }) => (isActive ? "active" : "")}
             >
               Accesorios
+            </NavLink>
+          </li>
+
+          <li>
+            <NavLink
+              to="/scryfall-catalogo"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              Singles
             </NavLink>
           </li>
 

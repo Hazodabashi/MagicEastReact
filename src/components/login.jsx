@@ -4,6 +4,25 @@ import "./Login.css";
 import { login } from "../api/authApi";
 import { registrarUsuario } from "../api/usuariosApi";
 
+const REGIONES = [
+  "Arica y Parinacota",
+  "Tarapacá",
+  "Antofagasta",
+  "Atacama",
+  "Coquimbo",
+  "Valparaíso",
+  "Metropolitana de Santiago",
+  "Libertador General Bernardo O'Higgins",
+  "Maule",
+  "Ñuble",
+  "Biobío",
+  "Araucanía",
+  "Los Ríos",
+  "Los Lagos",
+  "Aysén del General Carlos Ibáñez del Campo",
+  "Magallanes y de la Antártica Chilena"
+];
+
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -12,6 +31,8 @@ function Login() {
     apellidos: "",
     correo: "",
     direccion: "",
+    rut: "",
+    region: "",
     contraseña: "",
     repetir: "",
   });
@@ -20,8 +41,8 @@ function Login() {
   const [success, setSuccess] = useState("");
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const passwordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,}$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,}$/;
+  const rutRegex = /\b[0-9|.]{1,10}\-[K|k|0-9]/;
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -74,18 +95,23 @@ function Login() {
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    const { nombres, apellidos, correo, direccion, contraseña, repetir } = registerData;
+    const { nombres, apellidos, correo, direccion, rut, region, contraseña, repetir } = registerData;
 
     setError("");
     setSuccess("");
 
-    if (!nombres || !apellidos || !correo || !direccion || !contraseña || !repetir) {
+    if (!nombres || !apellidos || !correo || !direccion || !rut || !region || !contraseña || !repetir) {
       setError("Completa todos los campos");
       return;
     }
 
     if (!emailRegex.test(correo)) {
       setError("Correo electrónico no válido");
+      return;
+    }
+
+    if (!rutRegex.test(rut)) {
+      setError("El RUT no es válido (Ej: 12.345.678-9)");
       return;
     }
 
@@ -104,6 +130,8 @@ function Login() {
         nombre: `${nombres} ${apellidos} `,
         email: correo,
         direccion: direccion,
+        rut: rut,       // Enviamos el RUT
+        region: region, // Enviamos un string con el nombre de la región
         contrasena: contraseña,
       });
 
@@ -113,6 +141,8 @@ function Login() {
         apellidos: "",
         correo: "",
         direccion: "",
+        rut: "",
+        region: "",
         contraseña: "",
         repetir: "",
       });
@@ -205,6 +235,33 @@ function Login() {
                   value={registerData.direccion}
                   onChange={handleRegisterChange}
                 />
+              </div>
+
+              <div className="form-group mb-3">
+                <input
+                  className="form-control"
+                  type="text"
+                  name="rut"
+                  placeholder="RUT (ej: 12.345.678-9)"
+                  value={registerData.rut}
+                  onChange={handleRegisterChange}
+                />
+              </div>
+
+              <div className="form-group mb-3">
+                <select
+                  className="form-control"
+                  name="region"
+                  value={registerData.region}
+                  onChange={handleRegisterChange}
+                >
+                  <option value="">Selecciona una región</option>
+                  {REGIONES.map((reg) => (
+                    <option key={reg} value={reg}>
+                      {reg}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group mb-3">

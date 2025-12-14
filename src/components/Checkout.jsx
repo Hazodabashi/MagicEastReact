@@ -18,6 +18,7 @@ function Checkout() {
 
   const [mostrarModal, setMostrarModal] = useState(false);
   const [cargandoCompra, setCargandoCompra] = useState(false);
+  const [error, setError] = useState(""); // Nuevo estado para errores
 
   const boletaRef = useRef(null);
 
@@ -28,18 +29,19 @@ function Checkout() {
 
 
   const validarFormulario = () => {
+    setError(""); // Limpiar errores previos
     if (!direccion.trim() || !ciudad.trim() || !region.trim() || !telefono.trim()) {
-      alert("Por favor completa todos los campos de envío.");
+      setError("Por favor completa todos los campos de envío.");
       return false;
     }
 
     if (!/^\+569\d{8}$/.test(telefono.trim())) {
-      alert("El teléfono debe tener el formato +569XXXXXXXX.");
+      setError("El teléfono debe tener el formato +569XXXXXXXX.");
       return false;
     }
 
     if (carrito.length === 0) {
-      alert("Tu carrito está vacío.");
+      setError("Tu carrito está vacío.");
       return false;
     }
 
@@ -51,6 +53,7 @@ function Checkout() {
     if (!validarFormulario()) return;
 
     setCargandoCompra(true);
+    setError("");
 
     // Construir JSON de compra
     const compraPayload = {
@@ -74,7 +77,7 @@ function Checkout() {
       const mensaje =
         error.response?.data || "Error al procesar compra en el servidor.";
 
-      alert(`❌ No se pudo procesar la compra:\n${mensaje}`);
+      setError(`❌ No se pudo procesar la compra: ${mensaje}`);
     } finally {
       setCargandoCompra(false);
     }
@@ -174,6 +177,8 @@ function Checkout() {
               <p className="checkout-total">
                 Total: <strong>${total.toLocaleString("es-CL")}</strong>
               </p>
+
+              {error && <p className="error-message" style={{ color: "red", fontWeight: "bold" }}>{error}</p>}
 
               <button
                 className="checkout-btn"

@@ -137,14 +137,17 @@ function StockBackOffice() {
     }
   };
 
+  const [errorGeneral, setErrorGeneral] = useState(null);
+
   const handleEliminarProducto = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este producto?")) return;
+    setErrorGeneral(null);
     try {
       await eliminarProducto(id);
       setProductos((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
       console.error("Error al eliminar producto:", err);
-      alert("No se pudo eliminar el producto.");
+      setErrorGeneral("No se pudo eliminar el producto.");
     }
   };
 
@@ -157,7 +160,7 @@ function StockBackOffice() {
   useEffect(() => {
     try {
       Chart.register(...registerables);
-    } catch {}
+    } catch { }
   }, []);
 
   useEffect(() => {
@@ -357,6 +360,8 @@ function StockBackOffice() {
             <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
               <h5 className="text-white mb-0">Inventario de Productos</h5>
 
+              {errorGeneral && <div className="text-danger fw-bold">{errorGeneral}</div>}
+
               <div className="d-flex flex-wrap gap-2 justify-content-center">
                 <button
                   className={`btn btn-sm ${categoriaFiltro === "todos" ? "btn-primary" : "btn-outline-primary"}`}
@@ -413,13 +418,12 @@ function StockBackOffice() {
                           <td>{p.stock}</td>
                           <td>
                             <span
-                              className={`badge ${
-                                estado === "Disponible"
-                                  ? "bg-success"
-                                  : estado === "Bajo Stock"
+                              className={`badge ${estado === "Disponible"
+                                ? "bg-success"
+                                : estado === "Bajo Stock"
                                   ? "bg-warning text-dark"
                                   : "bg-danger"
-                              }`}
+                                }`}
                             >
                               {estado}
                             </span>

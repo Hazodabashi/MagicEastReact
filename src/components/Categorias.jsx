@@ -1,30 +1,44 @@
-import React, { useEffect, useState } from "react";
-import "./CategoriaCss.css"
+import React from "react";
+import { Link } from "react-router-dom";
+import "./CategoriaCss.css";
 
 function Categorias() {
-  const [imagenes, setImagenes] = useState([]);
+  const categories = [
+    {
+      title: "Booster",
+      image: "booster10.png",
+      link: "/catalogobooster",
+    },
+    {
+      title: "Mazos",
+      image: "precon10.png",
+      link: "/catalogo",
+    },
+    {
+      title: "Accesorios",
+      image: "accesorio2.jpg",
+      link: "/catalogoaccesorio",
+    },
+  ];
 
- 
-  const titulos = ["Booster", "Mazos", "Accesorios"];
-
-  useEffect(() => {
-    fetch("/data/Categorias.json") // JSON solo con imágenes
-      .then(res => res.json())
-      .then(data => setImagenes(data.slice(0, 3))) // Tomamos solo las primeras 3 imágenes
-      .catch(err => console.error("Error al cargar imágenes:", err));
-  }, []);
+  const API_IMG_URL = "http://3.135.235.62:8080/api/productos/imagenes";
 
   return (
     <div className="categorias-section">
-      {imagenes.map((img, index) => (
-        <div className="shop" key={index}>
+      {categories.map((cat, index) => (
+        <Link to={cat.link} className="shop" key={index} style={{ textDecoration: 'none', color: 'inherit' }}>
           <div className="shop-img">
-            <img src={img} alt={titulos[index]} />
+            <img
+              src={`${API_IMG_URL}/${cat.image}`}
+              alt={cat.title}
+              onError={(e) => { e.target.src = "/images/placeholder.jpg"; }}
+            />
           </div>
           <div className="shop-body">
-            <h3>{titulos[index]}</h3>
+            <h3>{cat.title}</h3>
+            <span className="cta-btn">Ver Catálogo <i className="fa fa-arrow-circle-right"></i></span>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );
